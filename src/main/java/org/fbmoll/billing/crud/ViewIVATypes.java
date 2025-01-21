@@ -1,7 +1,9 @@
 package org.fbmoll.billing.crud;
 
 import lombok.Getter;
-import org.fbmoll.billing.classes.IVATypes;
+import org.fbmoll.billing.dataClasses.Client;
+import org.fbmoll.billing.dataClasses.IVATypes;
+import org.fbmoll.billing.resources.Queries;
 import org.fbmoll.billing.resources.Utils;
 
 import javax.swing.*;
@@ -10,16 +12,18 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.lang.reflect.Field;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 public class ViewIVATypes {
+    private ViewIVATypes() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
+
     public static void showIVATypesTable(JPanel panel) throws SQLException {
-        ArrayList<IVATypes> ivaTypes = queryGetIVATypes();
+        List<IVATypes> ivaTypes = Queries.queryGetIVATypes();
 
         String[] columnNames = {
                 "ID", "Cantidad IVA", "Descripción IVA"
@@ -27,12 +31,15 @@ public class ViewIVATypes {
 
         Object[][] data = new Object[ivaTypes.size()][columnNames.length];
         for (int i = 0; i < ivaTypes.size(); i++) {
-            IVATypes ivaType = ivaTypes.get(i);
-            data[i] = new Object[]{
-                    ivaType.getId(),
-                    ivaType.getAmount(),
-                    ivaType.getDescription()
-            };
+            Field[] declaredFields = Client.class.getDeclaredFields();
+
+            for (int j = 0; j < declaredFields.length; j++) {
+                try {
+                    data[i][j] = declaredFields[j].get(ivaTypes.get(i));
+                } catch (IllegalAccessException e) {
+                    data[i][j] = null;
+                }
+            }
         }
 
         DefaultTableModel tableModel = new DefaultTableModel(data, columnNames);
@@ -49,29 +56,6 @@ public class ViewIVATypes {
             panel.revalidate();
             panel.repaint();
         });
-    }
-
-    private static ArrayList<IVATypes> queryGetIVATypes() throws SQLException {
-        ArrayList<IVATypes> ivaTypes = new ArrayList<>();
-        String query = "SELECT * FROM tiposiva";
-
-        try (Connection conn = Utils.getConnection()) {
-            try (PreparedStatement statement = conn.prepareStatement(query);
-                 ResultSet resultSet = statement.executeQuery()) {
-
-                while (resultSet.next()) {
-                    int ivaTypeId = resultSet.getInt("idTipoIva");
-                    double ivaAmount = resultSet.getDouble("iva");
-                    String ivaDescription = resultSet.getString("observacionesTipoIva");
-
-                    ivaTypes.add(new IVATypes(ivaTypeId, ivaAmount, ivaDescription));
-                }
-            } catch (SQLException e) {
-                System.out.println("Error executing query: " + e.getMessage());
-            }
-        }
-
-        return ivaTypes;
     }
 
     private static JPanel createFilterPanel(String[] columnNames, DefaultTableModel tableModel, JTable table) {

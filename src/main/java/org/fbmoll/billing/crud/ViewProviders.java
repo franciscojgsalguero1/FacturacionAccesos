@@ -1,7 +1,9 @@
 package org.fbmoll.billing.crud;
 
 import lombok.Getter;
-import org.fbmoll.billing.classes.Provider;
+import org.fbmoll.billing.dataClasses.Client;
+import org.fbmoll.billing.dataClasses.Provider;
+import org.fbmoll.billing.resources.Queries;
 import org.fbmoll.billing.resources.Utils;
 
 import javax.swing.*;
@@ -10,16 +12,18 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.lang.reflect.Field;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 public class ViewProviders {
+    private ViewProviders() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
+
     public static void showProviderTable(JPanel panel) throws SQLException {
-        ArrayList<Provider> providers = queryGetProviders();
+        List<Provider> providers = Queries.queryGetProviders();
 
         String[] columnNames = {
                 "ID", "Nombre", "Dirección", "Código Postal", "Población", "Provincia", "País",
@@ -28,27 +32,21 @@ public class ViewProviders {
 
         Object[][] data = new Object[providers.size()][columnNames.length];
         for (int i = 0; i < providers.size(); i++) {
-            Provider provider = providers.get(i);
-            data[i] = new Object[]{
-                    provider.getId(),
-                    provider.getName(),
-                    provider.getAddress(),
-                    provider.getPostCode(),
-                    provider.getTown(),
-                    provider.getProvince(),
-                    provider.getCountry(),
-                    provider.getCif(),
-                    provider.getPhone(),
-                    provider.getEmail(),
-                    provider.getWebsite(),
-                    provider.getNotes()
-            };
+            Field[] declaredFields = Client.class.getDeclaredFields();
+
+            for (int j = 0; j < declaredFields.length; j++) {
+                try {
+                    data[i][j] = declaredFields[j].get(providers.get(i));
+                } catch (IllegalAccessException e) {
+                    data[i][j] = null;
+                }
+            }
         }
 
         DefaultTableModel tableModel = new DefaultTableModel(data, columnNames);
         JTable table = new JTable(tableModel);
         JScrollPane pane = new JScrollPane(Utils.resizeTableColumns(table));
-        JPanel filterPanel = createFilterPanel(columnNames, tableModel, table);
+        JPanel filterPanel = createFilterPanel(panel, columnNames, tableModel, table);
 
         // Event Dispatcher Thread
         SwingUtilities.invokeLater(() -> {
@@ -61,44 +59,13 @@ public class ViewProviders {
         });
     }
 
-    private static ArrayList<Provider> queryGetProviders() throws SQLException {
-        ArrayList<Provider> providers = new ArrayList<>();
-        String query = "SELECT * FROM proveedores";
-
-        try (Connection conn = Utils.getConnection()) {
-            try (PreparedStatement statement = conn.prepareStatement(query);
-                 ResultSet resultSet = statement.executeQuery()) {
-
-                while (resultSet.next()) {
-                    int providerId = resultSet.getInt("idProveedor");
-                    String providerName = resultSet.getString("nombreProveedor");
-                    String providerAddress = resultSet.getString("direccionProveedor");
-                    int providerPostalCode = resultSet.getInt("cpProveedor");
-                    String providerTown = resultSet.getString("poblacionProveedor");
-                    String providerProvince = resultSet.getString("provinciaProveedor");
-                    String providerCountry = resultSet.getString("paisProveedor");
-                    String providerCif = resultSet.getString("cifProveedor");
-                    String providerPhone = resultSet.getString("telProveedor");
-                    String providerEmail = resultSet.getString("emailProveedor");
-                    String providerWebsite = resultSet.getString("webProveedor");
-                    String providerNotes = resultSet.getString("observacionesProveedor");
-
-                    providers.add(new Provider(providerId, providerName, providerAddress, providerPostalCode, providerTown,
-                            providerProvince, providerCountry, providerCif, providerPhone, providerEmail, providerWebsite,
-                            providerNotes));
-                }
-            } catch (SQLException e) {
-                System.out.println("Error executing query: " + e.getMessage());
-            }
-        }
-
-        return providers;
-    }
-
-    private static JPanel createFilterPanel(String[] columnNames, DefaultTableModel tableModel, JTable table) {
+    private static JPanel createFilterPanel(JPanel panel, String[] columnNames, DefaultTableModel tableModel, JTable table) {
         JTextField filterField = new JTextField(20);
         JComboBox<String> columnSelector = new JComboBox<>(getFilterableColumns(columnNames));
         JLabel filterLabel = new JLabel("Filter:");
+
+        JButton createProviderButton = new JButton("Crear Proveedor");
+        createProviderButton.addActionListener(e -> new CreateProvider().createProvider(panel));
 
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel);
         sorter.setSortable(0, false);
@@ -132,10 +99,11 @@ public class ViewProviders {
             }
         });
 
-        return styleFilterPanel(filterLabel, filterField, columnSelector);
+        return styleFilterPanel(filterLabel, filterField, columnSelector, createProviderButton);
     }
 
-    private static JPanel styleFilterPanel(JLabel filterLabel, JTextField filterField, JComboBox<String> columnSelector) {
+    private static JPanel styleFilterPanel(JLabel filterLabel, JTextField filterField,
+                                           JComboBox<String> columnSelector, JButton button) {
         JPanel filterPanel = new JPanel(new GridBagLayout());
         filterPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -145,12 +113,15 @@ public class ViewProviders {
 
         gbc.gridx = 0;
         gbc.gridy = 0;
-        filterPanel.add(filterLabel, gbc);
-
-        gbc.gridx = 1;
-        filterPanel.add(filterField, gbc);
+        filterPanel.add(button, gbc);
 
         gbc.gridx = 2;
+        filterPanel.add(filterLabel, gbc);
+
+        gbc.gridx = 3;
+        filterPanel.add(filterField, gbc);
+
+        gbc.gridx = 4;
         filterPanel.add(columnSelector, gbc);
 
         return filterPanel;

@@ -1,4 +1,4 @@
-package org.fbmoll.billing.classes;
+package org.fbmoll.billing.dataClasses;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -7,9 +7,9 @@ import lombok.experimental.FieldDefaults;
 
 @Getter
 @AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class ItemFamily {
+@FieldDefaults(level = AccessLevel.PUBLIC)
+public class IVATypes {
     int id;
-    String code;
+    double amount;
     String description;
 }

@@ -1,25 +1,29 @@
 package org.fbmoll.billing.crud;
 
 import lombok.Getter;
-import org.fbmoll.billing.classes.CorrectiveInvoice;
+import org.fbmoll.billing.dataClasses.Client;
+import org.fbmoll.billing.dataClasses.CorrectiveInvoice;
+import org.fbmoll.billing.resources.Queries;
 import org.fbmoll.billing.resources.Utils;
+
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.lang.reflect.Field;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 public class ViewCorrectiveInvoices {
+    private ViewCorrectiveInvoices() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
+
     public static void showCorrectiveInvoiceTable(JPanel panel) throws SQLException {
-        ArrayList<CorrectiveInvoice> correctiveInvoices = queryGetCorrectiveInvoices();
+        List<CorrectiveInvoice> correctiveInvoices = Queries.queryGetCorrectiveInvoices();
 
         String[] columnNames = {
                 "ID", "Número de Rectificativa", "Fecha de Rectificativa", "ID Cliente", "Base Imponible", "Cantidad IVA", "Total",
@@ -28,19 +32,15 @@ public class ViewCorrectiveInvoices {
 
         Object[][] data = new Object[correctiveInvoices.size()][columnNames.length];
         for (int i = 0; i < correctiveInvoices.size(); i++) {
-            CorrectiveInvoice correctiveInvoice = correctiveInvoices.get(i);
-            data[i] = new Object[]{
-                    correctiveInvoice.getId(),
-                    correctiveInvoice.getNumber(),
-                    correctiveInvoice.getDate(),
-                    correctiveInvoice.getClientId(),
-                    correctiveInvoice.getTaxableAmount(),
-                    correctiveInvoice.getVatAmount(),
-                    correctiveInvoice.getTotalAmount(),
-                    correctiveInvoice.hashCode(),
-                    correctiveInvoice.getQrCode(),
-                    correctiveInvoice.getNotes()
-            };
+            Field[] declaredFields = Client.class.getDeclaredFields();
+
+            for (int j = 0; j < declaredFields.length; j++) {
+                try {
+                    data[i][j] = declaredFields[j].get(correctiveInvoices.get(i));
+                } catch (IllegalAccessException e) {
+                    data[i][j] = null;
+                }
+            }
         }
 
         DefaultTableModel tableModel = new DefaultTableModel(data, columnNames);
@@ -59,49 +59,13 @@ public class ViewCorrectiveInvoices {
         });
     }
 
-    private static ArrayList<CorrectiveInvoice> queryGetCorrectiveInvoices() throws SQLException {
-        ArrayList<CorrectiveInvoice> correctiveInvoices = new ArrayList<>();
-        String query = "SELECT * FROM rectificativasclientes";
-
-        try (Connection conn = Utils.getConnection()) {
-            try (PreparedStatement statement = conn.prepareStatement(query);
-                 ResultSet resultSet = statement.executeQuery()) {
-
-                while (resultSet.next()) {
-                    int correctiveInvoiceId = resultSet.getInt("idRectificativaCliente");
-                    int correctiveInvoiceNumber = resultSet.getInt("numeroRectificativaCliente");
-                    Date correctiveInvoiceDate = resultSet.getDate("fechaRectificativaCliente");
-                    int clientId = resultSet.getInt("idClienteRectificativaCliente");
-                    double taxableAmount = resultSet.getDouble("baseImponibleRectificativaCliente");
-                    double vatAmount = resultSet.getDouble("ivaRectificativaCliente");
-                    double totalAmount = resultSet.getDouble("totalRectificativaCliente");
-                    String correctiveInvoiceHash = resultSet.getString("hashRectificativaCliente");
-                    String correctiveInvoiceQrCode = resultSet.getString("qrRectificativaCliente");
-                    String correctiveInvoiceNotes = resultSet.getString("observacionesRectificativaCliente");
-
-                    correctiveInvoices.add(new CorrectiveInvoice(correctiveInvoiceId, correctiveInvoiceNumber, correctiveInvoiceDate,
-                            clientId, taxableAmount, vatAmount, totalAmount, correctiveInvoiceHash,
-                            correctiveInvoiceQrCode, correctiveInvoiceNotes));
-                }
-            } catch (SQLException e) {
-                System.out.println("Error executing query: " + e.getMessage());
-            }
-        }
-
-        return correctiveInvoices;
-    }
-
     private static JPanel createFilterPanel(JPanel panel, String[] columns, DefaultTableModel model, JTable table) {
         JTextField filterField = new JTextField(20);
         JComboBox<String> columnSelector = new JComboBox<>(getFilterableColumns(columns));
         JLabel filterLabel = new JLabel("Filter:");
 
-        // Add the "Create Corrective Invoice" button
         JButton createCorrectiveInvoiceButton = new JButton("Create Corrective Invoice");
-        createCorrectiveInvoiceButton.addActionListener(e -> {
-            // Trigger the Corrective Invoice creation process
-            new CreateCorrectiveInvoice().createNewCorrectiveInvoice(panel);
-        });
+        createCorrectiveInvoiceButton.addActionListener(e -> new CreateCorrectiveInvoice().createInvoice(panel));
 
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         sorter.setSortable(0, false);
@@ -139,7 +103,7 @@ public class ViewCorrectiveInvoices {
     }
 
     private static JPanel styleFilterPanel(JLabel filterLabel, JTextField filterField,
-                                           JComboBox<String> columnSelector, JButton createInvoiceButton) {
+                                           JComboBox<String> columnSelector, JButton button) {
         JPanel filterPanel = new JPanel(new GridBagLayout());
         filterPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -149,7 +113,7 @@ public class ViewCorrectiveInvoices {
 
         gbc.gridx = 0;
         gbc.gridy = 0;
-        filterPanel.add(createInvoiceButton, gbc);  // Create Invoice button added here
+        filterPanel.add(button, gbc);
 
         gbc.gridx = 2;
         filterPanel.add(filterLabel, gbc);

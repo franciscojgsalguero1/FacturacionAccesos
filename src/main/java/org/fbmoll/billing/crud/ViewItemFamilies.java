@@ -1,7 +1,9 @@
 package org.fbmoll.billing.crud;
 
 import lombok.Getter;
-import org.fbmoll.billing.classes.ItemFamily;
+import org.fbmoll.billing.dataClasses.Client;
+import org.fbmoll.billing.dataClasses.ItemFamily;
+import org.fbmoll.billing.resources.Queries;
 import org.fbmoll.billing.resources.Utils;
 
 import javax.swing.*;
@@ -10,16 +12,18 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.lang.reflect.Field;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 public class ViewItemFamilies {
+    private ViewItemFamilies() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
+
     public static void showArticleFamilyTable(JPanel panel) throws SQLException {
-        ArrayList<ItemFamily> articleFamilies = queryGetArticleFamilies();
+        List<ItemFamily> articleFamilies = Queries.queryGetArticleFamilies();
 
         String[] columnNames = {
                 "ID", "Código", "Descripción"
@@ -27,12 +31,15 @@ public class ViewItemFamilies {
 
         Object[][] data = new Object[articleFamilies.size()][columnNames.length];
         for (int i = 0; i < articleFamilies.size(); i++) {
-            ItemFamily articleFamily = articleFamilies.get(i);
-            data[i] = new Object[]{
-                    articleFamily.getId(),
-                    articleFamily.getCode(),
-                    articleFamily.getDescription()
-            };
+            Field[] declaredFields = Client.class.getDeclaredFields();
+
+            for (int j = 0; j < declaredFields.length; j++) {
+                try {
+                    data[i][j] = declaredFields[j].get(articleFamilies.get(i));
+                } catch (IllegalAccessException e) {
+                    data[i][j] = null;
+                }
+            }
         }
 
         DefaultTableModel tableModel = new DefaultTableModel(data, columnNames);
@@ -49,29 +56,6 @@ public class ViewItemFamilies {
             panel.revalidate();
             panel.repaint();
         });
-    }
-
-    private static ArrayList<ItemFamily> queryGetArticleFamilies() throws SQLException {
-        ArrayList<ItemFamily> articleFamilies = new ArrayList<>();
-        String query = "SELECT * FROM familiaarticulos";
-
-        try (Connection conn = Utils.getConnection()) {
-            try (PreparedStatement statement = conn.prepareStatement(query);
-                 ResultSet resultSet = statement.executeQuery()) {
-
-                while (resultSet.next()) {
-                    int articleFamilyId = resultSet.getInt("idFamiliaArticulos");
-                    String articleFamilyCode = resultSet.getString("codigoFamiliaArticulos");
-                    String articleFamilyDescription = resultSet.getString("denominacionFamilias");
-
-                    articleFamilies.add(new ItemFamily(articleFamilyId, articleFamilyCode, articleFamilyDescription));
-                }
-            } catch (SQLException e) {
-                System.out.println("Error executing query: " + e.getMessage());
-            }
-        }
-
-        return articleFamilies;
     }
 
     private static JPanel createFilterPanel(String[] columnNames, DefaultTableModel tableModel, JTable table) {
@@ -114,7 +98,8 @@ public class ViewItemFamilies {
         return styleFilterPanel(filterLabel, filterField, columnSelector);
     }
 
-    private static JPanel styleFilterPanel(JLabel filterLabel, JTextField filterField, JComboBox<String> columnSelector) {
+    private static JPanel styleFilterPanel(JLabel filterLabel, JTextField filterField,
+                                           JComboBox<String> columnSelector) {
         JPanel filterPanel = new JPanel(new GridBagLayout());
         filterPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 

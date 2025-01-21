@@ -1,7 +1,9 @@
 package org.fbmoll.billing.crud;
 
 import lombok.Getter;
-import org.fbmoll.billing.classes.Invoice;
+import org.fbmoll.billing.dataClasses.Client;
+import org.fbmoll.billing.dataClasses.Invoice;
+import org.fbmoll.billing.resources.Queries;
 import org.fbmoll.billing.resources.Utils;
 
 import javax.swing.*;
@@ -10,17 +12,18 @@ import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.lang.reflect.Field;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.List;
 
 @Getter
 public class ViewInvoices {
+    private ViewInvoices() {
+        throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+    }
+
     public static void showInvoiceTable(JPanel panel) throws SQLException {
-        ArrayList<Invoice> invoices = queryGetInvoices();
+        List<Invoice> invoices = Queries.queryGetInvoices();
 
         String[] columnNames = {
                 "ID", "Número de Factura", "Fecha de Factura", "ID Cliente", "Base Imponible", "Cantidad IVA", "Total",
@@ -29,28 +32,21 @@ public class ViewInvoices {
 
         Object[][] data = new Object[invoices.size()][columnNames.length];
         for (int i = 0; i < invoices.size(); i++) {
-            Invoice invoice = invoices.get(i);
-            data[i] = new Object[]{
-                    invoice.getId(),
-                    invoice.getNumber(),
-                    invoice.getDate(),
-                    invoice.getClientId(),
-                    invoice.getTaxableAmount(),
-                    invoice.getVatAmount(),
-                    invoice.getTotalAmount(),
-                    invoice.hashCode(),
-                    invoice.getQrCode(),
-                    invoice.isPaid(),
-                    invoice.getPaymentMethod(),
-                    invoice.getPaymentDate(),
-                    invoice.getNotes()
-            };
+            Field[] declaredFields = Client.class.getDeclaredFields();
+
+            for (int j = 0; j < declaredFields.length; j++) {
+                try {
+                    data[i][j] = declaredFields[j].get(invoices.get(i));
+                } catch (IllegalAccessException e) {
+                    data[i][j] = null;
+                }
+            }
         }
 
         DefaultTableModel tableModel = new DefaultTableModel(data, columnNames);
         JTable table = new JTable(tableModel);
         JScrollPane pane = new JScrollPane(Utils.resizeTableColumns(table));
-        JPanel filterPanel = createFilterPanel(columnNames, tableModel, table);
+        JPanel filterPanel = createFilterPanel(panel, columnNames, tableModel, table);
 
         // Event Dispatcher Thread
         SwingUtilities.invokeLater(() -> {
@@ -63,47 +59,15 @@ public class ViewInvoices {
         });
     }
 
-    private static ArrayList<Invoice> queryGetInvoices() throws SQLException {
-        ArrayList<Invoice> invoices = new ArrayList<>();
-        String query = "SELECT * FROM facturasclientes";
-
-        try (Connection conn = Utils.getConnection()) {
-            try (PreparedStatement statement = conn.prepareStatement(query);
-                 ResultSet resultSet = statement.executeQuery()) {
-
-                while (resultSet.next()) {
-                    int invoiceId = resultSet.getInt("idFacturaCliente");
-                    int invoiceNumber = resultSet.getInt("numeroFacturaCliente");
-                    Date invoiceDate = resultSet.getDate("fechaFacturaCliente");
-                    int clientId = resultSet.getInt("idClienteFactura");
-                    int taxableAmount = resultSet.getInt("baseImponibleFacturaCliente");
-                    int vatAmount = resultSet.getInt("ivaFacturaCliente");
-                    int totalAmount = resultSet.getInt("totalFacturaCliente");
-                    String invoiceHash = resultSet.getString("hashFacturaCliente");
-                    String invoiceQrCode = resultSet.getString("qrFacturaCliente");
-                    boolean isPaid = resultSet.getBoolean("cobradaFactura");
-                    int paymentMethod = resultSet.getInt("formaCobroFactura");
-                    Date paymentDate = resultSet.getDate("fechaCobroFactura");
-                    String invoiceNotes = resultSet.getString("observacionesFacturaClientes");
-
-                    System.out.println(invoiceId);
-                    invoices.add(new Invoice(invoiceId, invoiceNumber, invoiceDate, clientId, taxableAmount, vatAmount,
-                            totalAmount, invoiceHash, invoiceQrCode, isPaid, paymentMethod, paymentDate, invoiceNotes));
-                }
-            } catch (SQLException e) {
-                System.out.println("Error executing query: " + e.getMessage());
-            }
-        }
-
-        return invoices;
-    }
-
-    private static JPanel createFilterPanel(String[] columnNames, DefaultTableModel tableModel, JTable table) {
+    private static JPanel createFilterPanel(JPanel panel, String[] columns, DefaultTableModel model, JTable table) {
         JTextField filterField = new JTextField(20);
-        JComboBox<String> columnSelector = new JComboBox<>(getFilterableColumns(columnNames));
+        JComboBox<String> columnSelector = new JComboBox<>(getFilterableColumns(columns));
         JLabel filterLabel = new JLabel("Filter:");
 
-        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel);
+        JButton createInvoiceButton = new JButton("Crear Factura");
+        createInvoiceButton.addActionListener(e -> new CreateInvoice().createInvoice(panel));
+
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         sorter.setSortable(0, false);
         table.setRowSorter(sorter);
 
@@ -135,10 +99,11 @@ public class ViewInvoices {
             }
         });
 
-        return styleFilterPanel(filterLabel, filterField, columnSelector);
+        return styleFilterPanel(filterLabel, filterField, columnSelector, createInvoiceButton);
     }
 
-    private static JPanel styleFilterPanel(JLabel filterLabel, JTextField filterField, JComboBox<String> columnSelector) {
+    private static JPanel styleFilterPanel(JLabel filterLabel, JTextField filterField,
+                                           JComboBox<String> columnSelector, JButton button) {
         JPanel filterPanel = new JPanel(new GridBagLayout());
         filterPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -148,12 +113,15 @@ public class ViewInvoices {
 
         gbc.gridx = 0;
         gbc.gridy = 0;
-        filterPanel.add(filterLabel, gbc);
-
-        gbc.gridx = 1;
-        filterPanel.add(filterField, gbc);
+        filterPanel.add(button, gbc);
 
         gbc.gridx = 2;
+        filterPanel.add(filterLabel, gbc);
+
+        gbc.gridx = 3;
+        filterPanel.add(filterField, gbc);
+
+        gbc.gridx = 4;
         filterPanel.add(columnSelector, gbc);
 
         return filterPanel;

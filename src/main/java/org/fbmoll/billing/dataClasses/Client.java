@@ -1,4 +1,4 @@
-package org.fbmoll.billing.classes;
+package org.fbmoll.billing.dataClasses;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -7,8 +7,8 @@ import lombok.experimental.FieldDefaults;
 
 @Getter
 @AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class Provider {
+@FieldDefaults(level = AccessLevel.PUBLIC)
+public class Client {
     int id;
     String name;
     String address;
@@ -17,8 +17,10 @@ public class Provider {
     String province;
     String country;
     String cif;
-    String phone;
+    String number;
     String email;
-    String website;
-    String notes;
+    String iban;
+    double risk;
+    double discount;
+    String description;
 }

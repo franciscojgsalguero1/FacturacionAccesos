@@ -1,4 +1,4 @@
-package org.fbmoll.billing.classes;
+package org.fbmoll.billing.dataClasses;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -7,7 +7,7 @@ import lombok.experimental.FieldDefaults;
 
 @Getter
 @AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PUBLIC)
 public class Item {
     int id;
     String code;

@@ -1,7 +1,7 @@
 package org.fbmoll.billing.crud;
 
 import lombok.Getter;
-import org.fbmoll.billing.classes.CorrectiveInvoice;
+import org.fbmoll.billing.dataClasses.CorrectiveInvoice;
 import org.fbmoll.billing.resources.Utils;
 
 import javax.swing.*;
@@ -11,10 +11,10 @@ import java.sql.*;
 
 @Getter
 public class CreateCorrectiveInvoice {
-    public void createNewCorrectiveInvoice(JPanel panel) {
+    public void createInvoice(JPanel panel) {
         JFrame frame = new JFrame("Create Corrective Invoice");
         frame.setSize(700, 500);
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         frame.setLocationRelativeTo(null);
 
         JPanel formPanel = new JPanel(new GridBagLayout());
@@ -57,8 +57,8 @@ public class CreateCorrectiveInvoice {
                 double totalAmount = Double.parseDouble(totalAmountField.getText());
 
                 if (taxableAmount < 0 || vatAmount < 0 || totalAmount < 0) {
-                    JOptionPane.showMessageDialog(frame, "Amounts must be positive.", "Error",
-                            JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(frame, "Las cantidades deben ser superiores a 0.",
+                            "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 

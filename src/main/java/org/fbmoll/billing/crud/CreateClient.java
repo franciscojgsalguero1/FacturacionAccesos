@@ -1,20 +1,22 @@
 package org.fbmoll.billing.crud;
 
 import lombok.Getter;
-import org.fbmoll.billing.classes.Client;
+import org.fbmoll.billing.dataClasses.Client;
 import org.fbmoll.billing.resources.Utils;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 @Getter
 public class CreateClient extends JFrame {
     public void createNewClient(JPanel panel) {
         this.setTitle("Create Client");
         this.setSize(700, 500);
-        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         this.setLocationRelativeTo(null);
 
         JPanel formPanel = new JPanel(new GridBagLayout());
@@ -81,13 +83,13 @@ public class CreateClient extends JFrame {
                 double discount = Double.parseDouble(discountField.getText());
 
                 if (risk < 0 || risk > 999.99) {
-                    JOptionPane.showMessageDialog(this, "Risk must be between 0 and 999.99",
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Riesgo tiene que ser entre 0 y " +
+                                    "999.99", "Riesgo inválido", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 if (discount < 0 || discount > 99.99) {
-                    JOptionPane.showMessageDialog(this, "Discount must be between 0 and 99.99",
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Descuento tiene que ser entre 0 y " +
+                            "99.99", "Descuento inválido", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
@@ -103,7 +105,7 @@ public class CreateClient extends JFrame {
                         + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
                 try (Connection conn = Utils.getConnection();
-                     PreparedStatement ps = conn.prepareStatement(query)) {
+                    PreparedStatement ps = conn.prepareStatement(query)) {
 
                     ps.setString(1, client.getName());
                     ps.setString(2, client.getAddress());
@@ -127,9 +129,9 @@ public class CreateClient extends JFrame {
                         ViewClients.visualizeClients(panel);
                     }
                 }
-            } catch (NumberFormatException | SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Please enter valid numerical values for " +
-                        "risk and discount.", "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (NumberFormatException | SQLException | IllegalAccessException ex) {
+                JOptionPane.showMessageDialog(this, "Please enter valid numerical values" +
+                        "for risk and discount.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
         formPanel.add(submitButton, setGBC(1, 7, 4));

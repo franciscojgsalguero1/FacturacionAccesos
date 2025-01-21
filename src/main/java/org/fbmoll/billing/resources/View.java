@@ -4,6 +4,8 @@ import lombok.AccessLevel;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import org.fbmoll.billing.crud.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,11 +15,12 @@ import java.awt.event.ActionListener;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class View extends JFrame implements ActionListener {
     final JPanel mainPanel;
+    static final Logger logger = LoggerFactory.getLogger(View.class);
 
     public View() {
-        setTitle("Sistema de Gestión");
-        setSize(1400, 750);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setTitle("Sistema de Gestión");
+        this.setSize(1400, 750);
+        this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         JMenuBar menuBar = new JMenuBar();
         JMenu recordsMenu = new JMenu("Fichas");
@@ -45,7 +48,8 @@ public class View extends JFrame implements ActionListener {
         mainPanel = new JPanel(new BorderLayout());
         add(mainPanel, BorderLayout.CENTER);
 
-        setLocationRelativeTo(null);
+        this.setLocationRelativeTo(null);
+        this.setVisible(true);
     }
 
     private void createRecordsMenu(JMenu menu) {
@@ -92,29 +96,35 @@ public class View extends JFrame implements ActionListener {
 
             switch (itemText) {
                 case "Clientes" -> ViewClients.visualizeClients(mainPanel);
-                case "Artículos" -> ViewItems.showArticleTable(mainPanel);
+                case "Artículos" -> ViewItems.showItemsTable(mainPanel);
                 case "Proveedores" -> ViewProviders.showProviderTable(mainPanel);
-                case "Comerciales" -> System.out.println("Comerciales menu item selected");
-                case "Distribuidores" -> System.out.println("Distribuidores menu item selected");
-                case "Trabajadores" -> System.out.println("Trabajadores menu item selected");
+                case "Comerciales" -> logger.info("Comerciales menu item selected");
+                case "Distribuidores" -> logger.info("Distribuidores menu item selected");
+                case "Trabajadores" -> logger.info("Trabajadores menu item selected");
                 case "Tipos IVA" -> ViewIVATypes.showIVATypesTable(mainPanel);
                 case "Familias" -> ViewItemFamilies.showArticleFamilyTable(mainPanel);
-                case "Crear Factura" -> System.out.println("Crear Factura menu item selected");
+                case "Crear Factura" -> {
+                    ViewInvoices.showInvoiceTable(mainPanel);
+                    new CreateInvoice().createInvoice(mainPanel);
+                }
                 case "Ver Facturas" -> ViewInvoices.showInvoiceTable(mainPanel);
-                case "Crear Rectificativa" -> System.out.println("Crear Rectificativa menu item selected");
+                case "Crear Rectificativa" -> {
+                    ViewCorrectiveInvoices.showCorrectiveInvoiceTable(mainPanel);
+                    new CreateCorrectiveInvoice().createInvoice(mainPanel);
+                }
                 case "Ver Rectificativas" -> ViewCorrectiveInvoices.showCorrectiveInvoiceTable(mainPanel);
-                case "Listar Clientes" -> System.out.println("Listar Clientes menu item selected");
-                case "Listar Artículos" -> System.out.println("Listar Artículos menu item selected");
-                case "Listar Proveedores" -> System.out.println("Listar Proveedores menu item selected");
-                case "Listar Comerciales" -> System.out.println("Listar Comerciales menu item selected");
-                case "Listar Distribuidores" -> System.out.println("Listar Distribuidores menu item selected");
-                case "Listar Trabajadores" -> System.out.println("Listar Trabajadores menu item selected");
-                case "Listar Tipos IVA" -> System.out.println("Listar Tipos IVA menu item selected");
-                case "Listar Familias" -> System.out.println("Listar Familias menu item selected");
-                case "Datos de la Empresa" -> System.out.println("Datos de la Empresa menu item selected");
-                case "Manual de Usuario" -> System.out.println("Manual de Usuario menu item selected");
-                case "Acerca de" -> System.out.println("Acerca de menu item selected");
-                default -> System.out.println("Unknown menu item selected");
+                case "Listar Clientes" -> logger.info("Listar Clientes menu item selected");
+                case "Listar Artículos" -> logger.info("Listar Artículos menu item selected");
+                case "Listar Proveedores" -> logger.info("Listar Proveedores menu item selected");
+                case "Listar Comerciales" -> logger.info("Listar Comerciales menu item selected");
+                case "Listar Distribuidores" -> logger.info("Listar Distribuidores menu item selected");
+                case "Listar Trabajadores" -> logger.info("Listar Trabajadores menu item selected");
+                case "Listar Tipos IVA" -> logger.info("Listar Tipos IVA menu item selected");
+                case "Listar Familias" -> logger.info("Listar Familias menu item selected");
+                case "Datos de la Empresa" -> logger.info("Datos de la Empresa menu item selected");
+                case "Manual de Usuario" -> logger.info("Manual de Usuario menu item selected");
+                case "Acerca de" -> logger.info("Acerca de menu item selected");
+                default -> logger.info("Unknown menu item selected");
             }
         }
     }

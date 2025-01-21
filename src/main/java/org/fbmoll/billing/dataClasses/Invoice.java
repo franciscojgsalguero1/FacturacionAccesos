@@ -1,4 +1,4 @@
-package org.fbmoll.billing.classes;
+package org.fbmoll.billing.dataClasses;
 
 import java.sql.Date;
 import lombok.AccessLevel;
@@ -8,8 +8,8 @@ import lombok.experimental.FieldDefaults;
 
 @Getter
 @AllArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class CorrectiveInvoice {
+@FieldDefaults(level = AccessLevel.PUBLIC)
+public class Invoice {
     int id;
     int number;
     Date date;
@@ -19,5 +19,8 @@ public class CorrectiveInvoice {
     double totalAmount;
     String hash;
     String qrCode;
+    boolean isPaid;
+    int paymentMethod;
+    Date paymentDate;
     String notes;
 }
