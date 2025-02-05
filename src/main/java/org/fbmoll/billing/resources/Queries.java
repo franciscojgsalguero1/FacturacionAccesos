@@ -1,6 +1,6 @@
 package org.fbmoll.billing.resources;
 
-import org.fbmoll.billing.dataClasses.*;
+import org.fbmoll.billing.data_classes.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -49,7 +49,7 @@ public class Queries {
         return clients;
     }
 
-    public static List<CorrectiveInvoice> queryGetCorrectiveInvoices() throws SQLException {
+    public static List<CorrectiveInvoice> queryGetCorrective() throws SQLException {
         List<CorrectiveInvoice> correctiveInvoices = new ArrayList<>();
         String query = """
                     SELECT idRectificativaCliente, numeroRectificativaCliente, fechaRectificativaCliente,
@@ -68,6 +68,7 @@ public class Queries {
                         resultSet.getInt("numeroRectificativaCliente"),
                         resultSet.getDate("fechaRectificativaCliente"),
                         resultSet.getInt("idClienteRectificativaCliente"),
+                        resultSet.getInt("idTrabajadorRectificativaCliente"), // TODO ADD TO BD
                         resultSet.getDouble("baseImponibleRectificativaCliente"),
                         resultSet.getDouble("ivaRectificativaCliente"),
                         resultSet.getDouble("totalRectificativaCliente"),
@@ -99,6 +100,7 @@ public class Queries {
                         resultSet.getInt("numeroFacturaCliente"),
                         resultSet.getDate("fechaFacturaCliente"),
                         resultSet.getInt("idClienteFactura"),
+                        resultSet.getInt("idTrabajadorFactura"), // TODO ADD TO DB
                         resultSet.getInt("baseImponibleFacturaCliente"),
                         resultSet.getInt("ivaFacturaCliente"),
                         resultSet.getInt("totalFacturaCliente"),
@@ -114,7 +116,7 @@ public class Queries {
         return invoices;
     }
 
-    public static List<ItemFamily> queryGetArticleFamilies() throws SQLException {
+    public static List<ItemFamily> queryGetItemFamilies() throws SQLException {
         List<ItemFamily> articleFamilies = new ArrayList<>();
         String query = """
                     SELECT idFamiliaArticulos, codigoFamiliaArticulos, denominacionFamilias
@@ -221,5 +223,19 @@ public class Queries {
             }
         }
         return providers;
+    }
+
+    public static List<String> queryGetWorkerNames() {
+        List<String> workers = new ArrayList<>(); // TODO IMPLEMENT
+        return workers;
+    }
+
+    public static List<Worker> queryGetWorkers() {
+        List<Worker> workers = new ArrayList<>(); // TODO IMPLEMENT
+        return workers;
+    }
+
+    public static int queryGetWorkerId(String name) {
+        return 0; // TODO IMPLEMENT
     }
 }

@@ -23,24 +23,21 @@ public class View extends JFrame implements ActionListener {
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         JMenuBar menuBar = new JMenuBar();
-        JMenu recordsMenu = new JMenu("Fichas");
-        JMenu invoicesMenu = new JMenu("Facturas");
-        JMenu correctiveInvoicesMenu = new JMenu("Rectificativas");
-        JMenu listingsMenu = new JMenu("Listados");
-        JMenu configurationMenu = new JMenu("Configuración");
-        JMenu helpMenu = new JMenu("Ayuda");
+        JMenu recordsMenu = new JMenu(Constants.FIELD_CLIENTS);
+        JMenu invoicesMenu = new JMenu(Constants.FIELD_INVOICES);
+        JMenu correctiveInvoicesMenu = new JMenu(Constants.FIELD_CORRECTIVE);
+        JMenu configurationMenu = new JMenu(Constants.FIELD_CONFIGURATION);
+        JMenu helpMenu = new JMenu(Constants.FIELD_HELP);
 
         createRecordsMenu(recordsMenu);
         createInvoicesMenu(invoicesMenu);
         createCorrectiveInvoicesMenu(correctiveInvoicesMenu);
-        createListingsMenu(listingsMenu);
         createConfigurationMenu(configurationMenu);
         createHelpMenu(helpMenu);
 
         menuBar.add(recordsMenu);
         menuBar.add(invoicesMenu);
         menuBar.add(correctiveInvoicesMenu);
-        menuBar.add(listingsMenu);
         menuBar.add(configurationMenu);
         menuBar.add(helpMenu);
 
@@ -53,29 +50,24 @@ public class View extends JFrame implements ActionListener {
     }
 
     private void createRecordsMenu(JMenu menu) {
-        addMenuItems(menu, "Clientes", "Artículos", "Proveedores", "Comerciales", "Distribuidores",
-                "Trabajadores", "Tipos IVA", "Familias");
+        addMenuItems(menu, Constants.FIELD_CLIENTS, Constants.FIELD_ARTICLES, Constants.FIELD_PROVIDERS,
+                Constants.FIELD_SELLERS, Constants.FIELD_WORKERS, Constants.FIELD_IVA_TYPES, Constants.FIELD_FAMILIES);
     }
 
     private void createInvoicesMenu(JMenu menu) {
-        addMenuItems(menu, "Crear Factura", "Ver Facturas");
+        addMenuItems(menu, Constants.BUTTON_CREATE + Constants.FIELD_INVOICES, Constants.FIELD_SEE_INVOICE);
     }
 
     private void createCorrectiveInvoicesMenu(JMenu menu) {
-        addMenuItems(menu, "Crear Rectificativa", "Ver Rectificativas");
-    }
-
-    private void createListingsMenu(JMenu menu) {
-        addMenuItems(menu, "Listar Clientes", "Listar Artículos", "Listar Proveedores", "Listar Comerciales",
-                "Listar Distribuidores", "Listar Trabajadores", "Listar Tipos IVA", "Listar Familias");
+        addMenuItems(menu, Constants.BUTTON_CREATE + Constants.FIELD_CORRECTIVE, Constants.FIELD_SEE_CORRECTIVE);
     }
 
     private void createConfigurationMenu(JMenu menu) {
-        addMenuItems(menu, "Datos de la Empresa");
+        addMenuItems(menu, Constants.FIELD_EMPLOYER_DATA);
     }
 
     private void createHelpMenu(JMenu menu) {
-        addMenuItems(menu, "Manual de Usuario", "Acerca de");
+        addMenuItems(menu, Constants.FIELD_USER_GUIDE, Constants.FIELD_ABOUT);
     }
 
     private void addMenuItems(JMenu menu, String... items) {
@@ -95,35 +87,34 @@ public class View extends JFrame implements ActionListener {
             String itemText = item.getText();
 
             switch (itemText) {
-                case "Clientes" -> ViewClients.visualizeClients(mainPanel);
-                case "Artículos" -> ViewItems.showItemsTable(mainPanel);
-                case "Proveedores" -> ViewProviders.showProviderTable(mainPanel);
-                case "Comerciales" -> logger.info("Comerciales menu item selected");
-                case "Distribuidores" -> logger.info("Distribuidores menu item selected");
-                case "Trabajadores" -> logger.info("Trabajadores menu item selected");
-                case "Tipos IVA" -> ViewIVATypes.showIVATypesTable(mainPanel);
-                case "Familias" -> ViewItemFamilies.showArticleFamilyTable(mainPanel);
-                case "Crear Factura" -> {
-                    ViewInvoices.showInvoiceTable(mainPanel);
-                    new CreateInvoice().createInvoice(mainPanel);
-                }
-                case "Ver Facturas" -> ViewInvoices.showInvoiceTable(mainPanel);
-                case "Crear Rectificativa" -> {
-                    ViewCorrectiveInvoices.showCorrectiveInvoiceTable(mainPanel);
-                    new CreateCorrectiveInvoice().createInvoice(mainPanel);
-                }
-                case "Ver Rectificativas" -> ViewCorrectiveInvoices.showCorrectiveInvoiceTable(mainPanel);
-                case "Listar Clientes" -> logger.info("Listar Clientes menu item selected");
-                case "Listar Artículos" -> logger.info("Listar Artículos menu item selected");
-                case "Listar Proveedores" -> logger.info("Listar Proveedores menu item selected");
-                case "Listar Comerciales" -> logger.info("Listar Comerciales menu item selected");
-                case "Listar Distribuidores" -> logger.info("Listar Distribuidores menu item selected");
-                case "Listar Trabajadores" -> logger.info("Listar Trabajadores menu item selected");
-                case "Listar Tipos IVA" -> logger.info("Listar Tipos IVA menu item selected");
-                case "Listar Familias" -> logger.info("Listar Familias menu item selected");
-                case "Datos de la Empresa" -> logger.info("Datos de la Empresa menu item selected");
-                case "Manual de Usuario" -> logger.info("Manual de Usuario menu item selected");
-                case "Acerca de" -> logger.info("Acerca de menu item selected");
+                case Constants.FIELD_CLIENTS -> GenericTableView.showTable(mainPanel,
+                        Queries.queryGetAllClients(), Constants.FIELD_CLIENTS);
+                case Constants.FIELD_ARTICLES -> GenericTableView.showTable(mainPanel,
+                        Queries.queryGetArticles(), Constants.FIELD_ARTICLES);
+                case Constants.FIELD_PROVIDERS -> GenericTableView.showTable(mainPanel,
+                        Queries.queryGetProviders(), Constants.FIELD_PROVIDERS);
+                case Constants.FIELD_IVA_TYPES -> GenericTableView.showTable(mainPanel,
+                        Queries.queryGetIVATypes(), Constants.FIELD_IVA_TYPES);
+                case Constants.FIELD_FAMILIES -> GenericTableView.showTable(mainPanel,
+                        Queries.queryGetItemFamilies(), Constants.FIELD_FAMILIES);
+
+                case Constants.BUTTON_CREATE + Constants.FIELD_INVOICES ->
+                        new GenericCreateForm(Constants.FIELD_INVOICES, mainPanel);
+                case Constants.BUTTON_CREATE + Constants.FIELD_CORRECTIVE ->
+                        new GenericCreateForm(Constants.FIELD_CORRECTIVE, mainPanel);
+
+                case Constants.FIELD_SEE_INVOICE -> GenericTableView.showTable(mainPanel,
+                        Queries.queryGetInvoices(), Constants.FIELD_INVOICES);
+                case Constants.FIELD_SEE_CORRECTIVE -> GenericTableView.showTable(mainPanel,
+                        Queries.queryGetCorrective(), Constants.FIELD_SEE_CORRECTIVE);
+
+                case Constants.FIELD_SELLERS -> logger.info(Constants.FIELD_SELLERS);
+                case Constants.FIELD_WORKERS -> GenericTableView.showTable(mainPanel,
+                        Queries.queryGetWorkers(), Constants.FIELD_WORKERS);
+                case Constants.FIELD_EMPLOYER_DATA -> logger.info(Constants.FIELD_EMPLOYER_DATA);
+                case Constants.FIELD_USER_GUIDE -> logger.info(Constants.FIELD_USER_GUIDE);
+                case Constants.FIELD_ABOUT -> logger.info(Constants.FIELD_ABOUT);
+
                 default -> logger.info("Unknown menu item selected");
             }
         }
