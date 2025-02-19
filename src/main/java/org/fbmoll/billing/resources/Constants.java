@@ -71,6 +71,10 @@ public final class Constants {
 
     public static final String FIELD_CLIENT_NOTES = "observacionesCliente";
     public static final String LABEL_CLIENT_NOTES = "Observaciones";
+    public static final String LABEL_CITY = "Ciudad";
+    public static final String CLIENT_EDIT = "Client Edit";
+    public static final String CLIENT_DELETE = "Client Delete";
+
 
     // ========== Invoice Fields ==========
     public static final String FIELD_INVOICE_NUMBER = "numeroFacturaCliente";
@@ -81,6 +85,9 @@ public final class Constants {
 
     public static final String FIELD_INVOICE_CLIENT_ID = "idClienteFactura";
     public static final String LABEL_INVOICE_CLIENT_ID = "ID Cliente";
+
+    public static final String FIELD_INVOICE_WORKER_ID = "idTrabajadorFactura";
+    public static final String LABEL_INVOICE_WORKER_ID = "ID Trabajador";
 
     public static final String FIELD_INVOICE_TAXABLE_AMOUNT = "baseImponibleFacturaCliente";
     public static final String LABEL_INVOICE_TAXABLE_AMOUNT = "Base Imponible";
@@ -199,6 +206,8 @@ public final class Constants {
 
     // ========== Buttons ==========
     public static final String BUTTON_CREATE = "Crear ";
+    public static final String BUTTON_EDIT = "Editar";
+    public static final String BUTTON_DELETE = "Eliminar";
     public static final String BUTTON_SAVE = "Guardar";
     public static final String LABEL_FILTER = "Filtrar:";
 }
