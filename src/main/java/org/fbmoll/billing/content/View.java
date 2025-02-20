@@ -90,11 +90,21 @@ public class View extends JFrame implements ActionListener {
 
             switch (itemText) {
                 case Constants.FIELD_CLIENTS -> Client.showClientTable(mainPanel, this);
+                case Constants.FIELD_ARTICLES -> Item.showItemTable(mainPanel, this);
+                case Constants.FIELD_PROVIDERS -> Provider.showProviderTable(mainPanel, this);
             }
         } else if (Constants.CLIENT_EDIT.equals(e.getActionCommand()) && source instanceof Client client) {
             client.modifyClientAction(mainPanel, this);
         } else if (Constants.CLIENT_DELETE.equals(e.getActionCommand()) && source instanceof Client client) {
             client.deleteClient(mainPanel, client.getId());
+        } else if (Constants.ARTICLE_EDIT.equals(e.getActionCommand()) && source instanceof Item item) {
+            item.modifyItemAction(mainPanel, this);
+        } else if (Constants.ARTICLE_DELETE.equals(e.getActionCommand()) && source instanceof Item item) {
+            item.deleteItem(mainPanel, item.getId());
+        } else if (Constants.PROVIDER_EDIT.equals(e.getActionCommand()) && source instanceof Provider provider) {
+            provider.modifyProviderAction(mainPanel, this);
+        } else if (Constants.PROVIDER_DELETE.equals(e.getActionCommand()) && source instanceof Provider provider) {
+            provider.deleteProvider(mainPanel, provider.getId());
         }
     }
 }

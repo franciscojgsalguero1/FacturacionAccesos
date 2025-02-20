@@ -14,6 +14,12 @@ public class ButtonRenderer extends JButton implements TableCellRenderer {
         if (value instanceof JButton) {
             this.setText(((JButton) value).getText());
         }
+
+        if (isSelected) {
+            setBackground(table.getSelectionBackground());
+        } else {
+            setBackground(UIManager.getColor("Button.background"));
+        }
         return this;
     }
 }

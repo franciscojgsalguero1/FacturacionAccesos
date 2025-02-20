@@ -1,6 +1,6 @@
 package org.fbmoll.billing.create_forms;
 
-import org.fbmoll.billing.data_classes.Client;
+import org.fbmoll.billing.data_classes.Provider;
 import org.fbmoll.billing.resources.Utils;
 
 import javax.swing.*;
@@ -9,7 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class CreateClientForm extends JDialog {
+public class CreateProviderForm extends JDialog {
     private final JPanel parentPanel;
     private final JTextField nameField = new JTextField(20);
     private final JTextField addressField = new JTextField(20);
@@ -20,13 +20,11 @@ public class CreateClientForm extends JDialog {
     private final JTextField cifField = new JTextField(20);
     private final JTextField phoneField = new JTextField(20);
     private final JTextField emailField = new JTextField(20);
-    private final JTextField ibanField = new JTextField(20);
-    private final JTextField riskField = new JTextField(10);
-    private final JTextField discountField = new JTextField(10);
+    private final JTextField websiteField = new JTextField(20);
 
-    public CreateClientForm(JPanel parentPanel) {
+    public CreateProviderForm(JPanel parentPanel) {
         this.parentPanel = parentPanel;
-        setTitle("Crear Cliente");
+        setTitle("Crear Proveedor");
         setSize(400, 500);
         setLayout(new BorderLayout());
         setModal(true);
@@ -52,15 +50,11 @@ public class CreateClientForm extends JDialog {
         formPanel.add(phoneField);
         formPanel.add(new JLabel("Email:"));
         formPanel.add(emailField);
-        formPanel.add(new JLabel("IBAN:"));
-        formPanel.add(ibanField);
-        formPanel.add(new JLabel("Riesgo:"));
-        formPanel.add(riskField);
-        formPanel.add(new JLabel("Descuento:"));
-        formPanel.add(discountField);
+        formPanel.add(new JLabel("Web:"));
+        formPanel.add(websiteField);
 
         JButton saveButton = new JButton("Guardar");
-        saveButton.addActionListener(e -> saveClient());
+        saveButton.addActionListener(e -> saveProvider());
 
         JButton cancelButton = new JButton("Cancelar");
         cancelButton.addActionListener(e -> dispose());
@@ -75,11 +69,11 @@ public class CreateClientForm extends JDialog {
         setVisible(true);
     }
 
-    private void saveClient() {
+    private void saveProvider() {
         try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement("INSERT INTO clientes (nombreCliente, direccionCliente, cpCliente, poblacionCliente, " +
-                     "provinciaCliente, paisCliente, cifCliente, telCliente, emailCliente, ibanCliente, " +
-                     "riesgoCliente, descuentoCliente, observacionesCliente) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+             PreparedStatement ps = conn.prepareStatement("INSERT INTO proveedores (nombreProveedor, direccionProveedor, " +
+                     "cpProveedor, poblacionProveedor, provinciaProveedor, paisProveedor, cifProveedor, telProveedor, " +
+                     "emailProveedor, webProveedor) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
 
             ps.setString(1, nameField.getText());
             ps.setString(2, addressField.getText());
@@ -90,16 +84,14 @@ public class CreateClientForm extends JDialog {
             ps.setString(7, cifField.getText());
             ps.setString(8, phoneField.getText());
             ps.setString(9, emailField.getText());
-            ps.setString(10, ibanField.getText());
-            ps.setDouble(11, Double.parseDouble(riskField.getText()));
-            ps.setDouble(12, Double.parseDouble(discountField.getText()));
+            ps.setString(10, websiteField.getText());
 
             ps.executeUpdate();
-            JOptionPane.showMessageDialog(this, "Cliente creado con éxito.");
+            JOptionPane.showMessageDialog(this, "Proveedor creado con éxito.");
             dispose();
-            Client.showClientTable(parentPanel, e -> {});
+            Provider.showProviderTable(parentPanel, e -> {});
         } catch (SQLException | NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Error al crear cliente: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error al crear proveedor: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

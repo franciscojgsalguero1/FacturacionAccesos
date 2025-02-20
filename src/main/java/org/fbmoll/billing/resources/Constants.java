@@ -147,6 +147,8 @@ public final class Constants {
 
     public static final String FIELD_ARTICLE_NOTES = "observacionesArticulo";
     public static final String LABEL_ARTICLE_NOTES = "Observaciones";
+    public static final String ARTICLE_EDIT = "Article Edit";
+    public static final String ARTICLE_DELETE = "Article Delete";
 
     // ========== Provider Fields ==========
     public static final String FIELD_PROVIDER_NAME = "nombreProveedor";
@@ -181,6 +183,8 @@ public final class Constants {
 
     public static final String FIELD_PROVIDER_NOTES = "observacionesProveedor";
     public static final String LABEL_PROVIDER_NOTES = "Observaciones";
+    public static final String PROVIDER_EDIT = "Provider Edit";
+    public static final String PROVIDER_DELETE = "Provider Delete";
 
     // ========== Family Fields ==========
     public static final String FIELD_FAMILY_CODE = "codigoFamiliaArticulos";

@@ -1,7 +1,5 @@
 package org.fbmoll.billing.resources;
 
-import org.fbmoll.billing.data_classes.Client;
-
 import javax.swing.*;
 import javax.swing.table.TableCellEditor;
 import java.awt.*;
@@ -9,17 +7,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
-public class ButtonEditor extends AbstractCellEditor implements TableCellEditor {
+public class ButtonEditor<T> extends AbstractCellEditor implements TableCellEditor {
     private final JButton button;
     private final ActionListener listener;
-    private Client client;
-    private final List<Client> clients;
+    private final List<T> items;
     private final JPanel panel;
     private final String actionCommand;
+    private T item; // Generic type for any object
 
-    public ButtonEditor(JCheckBox checkBox, ActionListener listener, List<Client> clients, JPanel panel, String actionCommand) {
+    public ButtonEditor(JCheckBox checkBox, ActionListener listener, List<T> items, JPanel panel, String actionCommand) {
         this.listener = listener;
-        this.clients = clients;
+        this.items = items;
         this.panel = panel;
         this.actionCommand = actionCommand;
 
@@ -27,10 +25,9 @@ public class ButtonEditor extends AbstractCellEditor implements TableCellEditor 
         this.button.setOpaque(true);
 
         this.button.addActionListener(e -> {
-            if (client != null) {
-                stopCellEditing(); // Ensures JTable registers the button click
-                System.out.println("Button clicked: " + actionCommand + " for client: " + client.getName());
-                listener.actionPerformed(new ActionEvent(client, ActionEvent.ACTION_PERFORMED, actionCommand));
+            if (item != null) {
+                stopCellEditing(); // Stops editing so action can be handled properly
+                listener.actionPerformed(new ActionEvent(item, ActionEvent.ACTION_PERFORMED, actionCommand));
             }
         });
     }
@@ -40,7 +37,7 @@ public class ButtonEditor extends AbstractCellEditor implements TableCellEditor 
         if (value instanceof JButton) {
             button.setText(((JButton) value).getText());
         }
-        client = clients.get(row); // Ensures correct client is selected
+        item = items.get(table.convertRowIndexToModel(row)); // Ensures correct row selection
         return button;
     }
 
