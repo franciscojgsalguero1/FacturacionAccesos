@@ -8,10 +8,12 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Address {
-    String street;
-    int postCode;
-    String town;
-    String province;
-    String country;
+public class ItemDTO {
+    final String code;
+    final String barCode;
+    final double cost;
+    final double margin;
+    final double price;
+    final int supplier;
+    final int stock;
 }

@@ -4,8 +4,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import org.fbmoll.billing.create_forms.CreateProviderForm;
-import org.fbmoll.billing.dto.Address;
-import org.fbmoll.billing.dto.ProviderData;
+import org.fbmoll.billing.dto.AddressDTO;
+import org.fbmoll.billing.dto.ProviderDTO;
 import org.fbmoll.billing.resources.Button;
 import org.fbmoll.billing.resources.*;
 import org.slf4j.Logger;
@@ -32,19 +32,19 @@ public class Provider {
     static final Logger logger = LoggerFactory.getLogger(Provider.class);
     final JPanel panel;
     final int id;
-    final Address address;
-    final ProviderData providerData;
+    final AddressDTO address;
+    final ProviderDTO providerData;
     final Button edit;
     final Button delete;
 
-    public Provider(JPanel panel, ActionListener listener, int id, Address address, ProviderData providerData) {
+    public Provider(JPanel panel, ActionListener listener, int id, AddressDTO address, ProviderDTO providerData) {
         this.panel = panel;
         this.id = id;
         this.address = address;
         this.providerData = providerData;
 
-        this.edit = new Button(Constants.BUTTON_EDIT, "📝");
-        this.delete = new Button(Constants.BUTTON_DELETE, "❌");
+        this.edit = new Button(Constants.BUTTON_EDIT);
+        this.delete = new Button(Constants.BUTTON_DELETE);
 
         this.edit.addActionListener(e -> {
             ActionEvent event = new ActionEvent(this, ActionEvent.ACTION_PERFORMED, Constants.PROVIDER_EDIT);
@@ -120,11 +120,11 @@ public class Provider {
                 providers.add(new Provider(
                         panel, listener,
                         rs.getInt("idProveedor"),
-                        new Address(rs.getString("direccionProveedor"), rs.getInt("cpProveedor"),
+                        new AddressDTO(rs.getString("direccionProveedor"), rs.getInt("cpProveedor"),
                                 rs.getString("poblacionProveedor"),
                                 rs.getString("provinciaProveedor"),
                                 rs.getString("paisProveedor")),
-                        new ProviderData(rs.getString("nombreProveedor"),
+                        new ProviderDTO(rs.getString("nombreProveedor"),
                                 rs.getString("cifProveedor"),
                                 rs.getString("telProveedor"), rs.getString("emailProveedor"),
                                 rs.getString("webProveedor"))
@@ -143,11 +143,14 @@ public class Provider {
         Object[][] data = new Object[providers.size()][columnNames.length];
         for (int i = 0; i < providers.size(); i++) {
             Provider p = providers.get(i);
+            JButton editButton = new JButton(Constants.BUTTON_EDIT);
+            JButton deleteButton = new JButton(Constants.BUTTON_DELETE);
+
             data[i] = new Object[]{
                     p.id, p.getProviderData().getName(), p.getAddress().getStreet(), p.getAddress().getPostCode(),
                     p.getAddress().getTown(), p.getAddress().getProvince(), p.getAddress().getCountry(),
                     p.getProviderData().getCif(), p.getProviderData().getNumber(), p.getProviderData().getEmail(),
-                    p.getProviderData().getWebsite(), Constants.BUTTON_EDIT, Constants.BUTTON_DELETE
+                    p.getProviderData().getWebsite(), editButton, deleteButton
             };
         }
 
@@ -286,9 +289,9 @@ public class Provider {
             try {
                 Provider updatedProvider = new Provider(
                         this.panel, listener, this.getId(),
-                        new Address(addressField.getText(), Integer.parseInt(postCodeField.getText()),
+                        new AddressDTO(addressField.getText(), Integer.parseInt(postCodeField.getText()),
                                 townField.getText(), provinceField.getText(), countryField.getText()),
-                        new ProviderData(nameField.getText(), cifField.getText(), phoneField.getText(),
+                        new ProviderDTO(nameField.getText(), cifField.getText(), phoneField.getText(),
                                 emailField.getText(), websiteField.getText())
                 );
 

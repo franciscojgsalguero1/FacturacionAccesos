@@ -27,19 +27,16 @@ public class View extends JFrame implements ActionListener {
         JMenuBar menuBar = new JMenuBar();
         JMenu recordsMenu = new JMenu(Constants.FIELD_CLIENTS);
         JMenu invoicesMenu = new JMenu(Constants.FIELD_INVOICES);
-        JMenu correctiveInvoicesMenu = new JMenu(Constants.FIELD_CORRECTIVE);
         JMenu configurationMenu = new JMenu(Constants.FIELD_CONFIGURATION);
         JMenu helpMenu = new JMenu(Constants.FIELD_HELP);
 
         createRecordsMenu(recordsMenu);
         createInvoicesMenu(invoicesMenu);
-        createCorrectiveInvoicesMenu(correctiveInvoicesMenu);
         createConfigurationMenu(configurationMenu);
         createHelpMenu(helpMenu);
 
         menuBar.add(recordsMenu);
         menuBar.add(invoicesMenu);
-        menuBar.add(correctiveInvoicesMenu);
         menuBar.add(configurationMenu);
         menuBar.add(helpMenu);
 
@@ -58,10 +55,6 @@ public class View extends JFrame implements ActionListener {
 
     private void createInvoicesMenu(JMenu menu) {
         addMenuItems(menu, Constants.BUTTON_CREATE + Constants.FIELD_INVOICES, Constants.FIELD_SEE_INVOICE);
-    }
-
-    private void createCorrectiveInvoicesMenu(JMenu menu) {
-        addMenuItems(menu, Constants.BUTTON_CREATE + Constants.FIELD_CORRECTIVE, Constants.FIELD_SEE_CORRECTIVE);
     }
 
     private void createConfigurationMenu(JMenu menu) {
@@ -92,6 +85,11 @@ public class View extends JFrame implements ActionListener {
                 case Constants.FIELD_CLIENTS -> Client.showClientTable(mainPanel, this);
                 case Constants.FIELD_ARTICLES -> Item.showItemTable(mainPanel, this);
                 case Constants.FIELD_PROVIDERS -> Provider.showProviderTable(mainPanel, this);
+                case Constants.FIELD_WORKERS -> Worker.showWorkerTable(mainPanel, this);
+                case Constants.FIELD_FAMILIES -> ItemFamily.showItemFamilyTable(mainPanel, this);
+                case Constants.FIELD_IVA_TYPES -> IVATypes.showIVATypesTable(mainPanel, this);
+                case "Ver Facturas" -> Invoice.showInvoiceTable(mainPanel, this);
+                default -> logger.info("Not found.");
             }
         } else if (Constants.CLIENT_EDIT.equals(e.getActionCommand()) && source instanceof Client client) {
             client.modifyClientAction(mainPanel, this);
@@ -105,6 +103,24 @@ public class View extends JFrame implements ActionListener {
             provider.modifyProviderAction(mainPanel, this);
         } else if (Constants.PROVIDER_DELETE.equals(e.getActionCommand()) && source instanceof Provider provider) {
             provider.deleteProvider(mainPanel, provider.getId());
+        } else if (Constants.WORKER_EDIT.equals(e.getActionCommand()) && source instanceof Worker worker) {
+            worker.modifyWorkerAction(mainPanel, this);
+        } else if (Constants.WORKER_DELETE.equals(e.getActionCommand()) && source instanceof Worker worker) {
+            worker.deleteWorker(mainPanel, worker.getId());
+        } else if (Constants.FAMILY_EDIT.equals(e.getActionCommand()) && source instanceof ItemFamily itemFamily) {
+            itemFamily.modifyItemFamilyAction(mainPanel, this);
+        } else if (Constants.FAMILY_DELETE.equals(e.getActionCommand()) && source instanceof ItemFamily itemFamily) {
+            itemFamily.deleteItemFamily(mainPanel, itemFamily.getId());
+        } else if (Constants.IVA_EDIT.equals(e.getActionCommand()) && source instanceof IVATypes ivaTypes) {
+            ivaTypes.modifyIVATypesAction(mainPanel, this);
+        } else if (Constants.IVA_DELETE.equals(e.getActionCommand()) && source instanceof IVATypes ivaTypes) {
+            ivaTypes.deleteIVATypes(mainPanel, ivaTypes.getId());
+        } else if (Constants.INVOICE_VIEW.equals(e.getActionCommand()) && source instanceof Invoice invoice) {
+            //invoice.viewInvoice(mainPanel, this);
+        } else if (Constants.INVOICE_EDIT.equals(e.getActionCommand()) && source instanceof Invoice invoice) {
+            invoice.modifyInvoiceAction(mainPanel, this);
+        } else if (Constants.INVOICE_DELETE.equals(e.getActionCommand()) && source instanceof Invoice invoice) {
+            invoice.deleteInvoice(mainPanel, invoice.getId());
         }
     }
 }

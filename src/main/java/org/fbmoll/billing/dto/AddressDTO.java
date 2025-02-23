@@ -8,10 +8,10 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ClientData {
-    String name;
-    String cif;
-    String number;
-    String email;
-    String iban;
+public class AddressDTO {
+    String street;
+    int postCode;
+    String town;
+    String province;
+    String country;
 }

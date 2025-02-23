@@ -4,7 +4,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import org.fbmoll.billing.create_forms.CreateItemForm;
-import org.fbmoll.billing.dto.ItemData;
+import org.fbmoll.billing.dto.ItemDTO;
 import org.fbmoll.billing.resources.*;
 import org.fbmoll.billing.resources.Button;
 import org.slf4j.Logger;
@@ -31,21 +31,21 @@ public class Item {
     static final Logger logger = LoggerFactory.getLogger(Item.class);
     final JPanel panel;
     final int id;
-    final ItemData itemData;
+    final ItemDTO itemData;
     final String description;
     final int familyId;
     final Button edit;
     final Button delete;
 
-    public Item(JPanel panel, ActionListener listener, int id, ItemData itemData, String description, int familyId) {
+    public Item(JPanel panel, ActionListener listener, int id, ItemDTO itemData, String description, int familyId) {
         this.panel = panel;
         this.id = id;
         this.itemData = itemData;
         this.description = description;
         this.familyId = familyId;
 
-        this.edit = new Button(Constants.BUTTON_EDIT, "📝");
-        this.delete = new Button(Constants.BUTTON_DELETE, "❌");
+        this.edit = new Button(Constants.BUTTON_EDIT);
+        this.delete = new Button(Constants.BUTTON_DELETE);
 
         this.edit.addActionListener(e -> {
             ActionEvent event = new ActionEvent(this, ActionEvent.ACTION_PERFORMED, Constants.ARTICLE_EDIT);
@@ -119,7 +119,7 @@ public class Item {
                 items.add(new Item(
                         panel, listener,
                         rs.getInt("idArticulo"),
-                        new ItemData(
+                        new ItemDTO(
                                 rs.getString("codigoArticulo"),
                                 rs.getString("codigoBarrasArticulo"),
                                 rs.getDouble("costeArticulo"),
@@ -296,7 +296,7 @@ public class Item {
             try {
                 Item updatedItem = new Item(
                         this.panel, listener, this.getId(),
-                        new ItemData(
+                        new ItemDTO(
                                 codeField.getText(), barCodeField.getText(), Double.parseDouble(costField.getText()),
                                 Double.parseDouble(marginField.getText()), Double.parseDouble(priceField.getText()),
                                 Integer.parseInt(supplierField.getText()), Integer.parseInt(stockField.getText())

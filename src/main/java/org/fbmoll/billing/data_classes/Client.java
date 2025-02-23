@@ -4,8 +4,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import org.fbmoll.billing.create_forms.CreateClientForm;
-import org.fbmoll.billing.dto.Address;
-import org.fbmoll.billing.dto.ClientData;
+import org.fbmoll.billing.dto.AddressDTO;
+import org.fbmoll.billing.dto.ClientDTO;
 import org.fbmoll.billing.resources.Button;
 import org.fbmoll.billing.resources.*;
 import org.slf4j.Logger;
@@ -31,8 +31,8 @@ import java.util.List;
 public class Client {
     final JPanel panel;
     final int id;
-    final Address address;
-    final ClientData personData;
+    final AddressDTO address;
+    final ClientDTO personData;
     final double risk;
     final double discount;
     final Button edit;
@@ -40,8 +40,8 @@ public class Client {
 
     static final Logger logger = LoggerFactory.getLogger(Client.class);
 
-    public Client(JPanel panel, ActionListener listener, int id, Address address,
-                  ClientData personData, double risk, double discount) {
+    public Client(JPanel panel, ActionListener listener, int id, AddressDTO address,
+                  ClientDTO personData, double risk, double discount) {
         this.panel = panel;
         this.id = id;
         this.address = address;
@@ -49,8 +49,8 @@ public class Client {
         this.risk = risk;
         this.discount = discount;
 
-        this.edit = new Button(Constants.BUTTON_EDIT, "📝");
-        this.delete = new Button(Constants.BUTTON_DELETE, "❌");
+        this.edit = new Button(Constants.BUTTON_EDIT);
+        this.delete = new Button(Constants.BUTTON_DELETE);
 
         this.edit.addActionListener(e -> {
             ActionEvent event = new ActionEvent(this, ActionEvent.ACTION_PERFORMED, Constants.CLIENT_EDIT);
@@ -136,11 +136,11 @@ public class Client {
                 clients.add(new Client(
                         panel, listener,
                         rs.getInt("idCliente"),
-                        new Address(rs.getString("direccionCliente"), rs.getInt("cpCliente"),
+                        new AddressDTO(rs.getString("direccionCliente"), rs.getInt("cpCliente"),
                                 rs.getString("poblacionCliente"),
                                 rs.getString("provinciaCliente"), rs.getString("paisCliente")
                         ),
-                        new ClientData(rs.getString("nombreCliente"), rs.getString("cifCliente"),
+                        new ClientDTO(rs.getString("nombreCliente"), rs.getString("cifCliente"),
                                 rs.getString("telCliente"), rs.getString("emailCliente"),
                                 rs.getString("ibanCliente")
                         ),
@@ -166,12 +166,14 @@ public class Client {
         Object[][] data = new Object[clients.size()][columnNames.length];
         for (int i = 0; i < clients.size(); i++) {
             Client c = clients.get(i);
+            JButton editButton = new JButton(Constants.BUTTON_EDIT);
+            JButton deleteButton = new JButton(Constants.BUTTON_DELETE);
+
             data[i] = new Object[]{
                     c.id, c.getPersonData().getName(), c.getAddress().getStreet(), c.getAddress().getPostCode(),
                     c.getAddress().getTown(), c.getAddress().getProvince(), c.getAddress().getCountry(),
                     c.getPersonData().getCif(), c.getPersonData().getNumber(), c.getPersonData().getEmail(),
-                    c.getPersonData().getIban(), c.risk, c.discount, new JButton(Constants.BUTTON_EDIT),
-                    new JButton(Constants.BUTTON_DELETE)
+                    c.getPersonData().getIban(), c.risk, c.discount, editButton, deleteButton
             };
         }
 
@@ -325,10 +327,10 @@ public class Client {
             try {
                 Client updatedClient = new Client(
                         this.panel, listener, this.getId(),
-                        new Address(addressField.getText(), Integer.parseInt(postCodeField.getText()),
+                        new AddressDTO(addressField.getText(), Integer.parseInt(postCodeField.getText()),
                                 townField.getText(), provinceField.getText(), countryField.getText()
                         ),
-                        new ClientData(nameField.getText(), cifField.getText(), phoneField.getText(),
+                        new ClientDTO(nameField.getText(), cifField.getText(), phoneField.getText(),
                                 emailField.getText(), ibanField.getText()
                         ),
                         Double.parseDouble(riskField.getText()),

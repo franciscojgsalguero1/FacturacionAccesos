@@ -115,6 +115,9 @@ public final class Constants {
 
     public static final String FIELD_INVOICE_NOTES = "observacionesFacturaClientes";
     public static final String LABEL_INVOICE_NOTES = "Observaciones";
+    public static final String INVOICE_VIEW = "Invoice View";
+    public static final String INVOICE_EDIT = "Invoice Edit";
+    public static final String INVOICE_DELETE = "Invoice Delete";
 
     // ========== Article Fields ==========
     public static final String FIELD_ARTICLE_CODE = "codigoArticulo";
@@ -191,12 +194,21 @@ public final class Constants {
     public static final String LABEL_FAMILY_CODE = "Código";
     public static final String FIELD_FAMILY_DESCRIPTION = "denominacionFamilias";
     public static final String LABEL_FAMILY_DESCRIPTION = "Descripción";
+    public static final String FAMILY_EDIT = "Family Edit";
+    public static final String FAMILY_DELETE = "Family Delete";
 
     // ========== IVA Type Fields ==========
     public static final String FIELD_IVA_AMOUNT = "iva";
     public static final String LABEL_IVA_AMOUNT = "Porcentaje";
     public static final String FIELD_IVA_DESCRIPTION = "observacionesTipoIva";
     public static final String LABEL_IVA_DESCRIPTION = "Descripción";
+
+    public static final String IVA_EDIT = "IVA Edit";
+    public static final String IVA_DELETE = "IVA Delete";
+
+    // ========== Worker Fields ===========
+    public static final String WORKER_EDIT = "Worker Edit";
+    public static final String WORKER_DELETE = "Worker Delete";
 
     // ========== Error Messages ==========
     public static final String ERROR = "Error";

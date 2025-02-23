@@ -8,12 +8,10 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ItemData {
-    final String code;
-    final String barCode;
-    final double cost;
-    final double margin;
-    final double price;
-    final int supplier;
-    final int stock;
+public class WorkerDTO {
+    String name;
+    String cif;
+    String number;
+    String email;
+    String position;
 }
