@@ -3,6 +3,7 @@ package org.fbmoll.billing.create_forms;
 import org.fbmoll.billing.resources.Utils;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.*;
@@ -51,31 +52,37 @@ public class CreateInvoiceForm extends JDialog {
     }
 
     private JPanel buildFormPanel() {
-        JPanel formPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+
+        JPanel formPanel = new JPanel(new GridBagLayout());
 
         baseAmountField.setEditable(false);
         totalAmountField.setEditable(false);
 
-        formPanel.add(new JLabel("Número Factura:"));
-        formPanel.add(numberField);
-        formPanel.add(new JLabel("Fecha (YYYY-MM-DD):"));
-        formPanel.add(dateField);
-        formPanel.add(new JLabel("Cliente:"));
-        formPanel.add(clientCombo);
-        formPanel.add(new JLabel("Trabajador:"));
-        formPanel.add(workerCombo);
-        formPanel.add(new JLabel("Base Imponible:"));
-        formPanel.add(baseAmountField);
-        formPanel.add(new JLabel("IVA:"));
-        formPanel.add(ivaCombo);
-        formPanel.add(new JLabel("Total:"));
-        formPanel.add(totalAmountField);
-        formPanel.add(new JLabel("Pagada:"));
-        formPanel.add(isPaidCheckBox);
-        formPanel.add(new JLabel("Forma de Pago:"));
-        formPanel.add(paymentMethodCombo);
-        formPanel.add(new JLabel("Fecha de Pago:"));
-        formPanel.add(paymentDateField);
+        setTitle("Crear Factura");
+        setSize(1000, 650);
+        setLayout(new BorderLayout());
+        setModal(true);
+        setLocationRelativeTo(parentPanel);
+
+        formPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        Object[][] rows = {
+                {"Número Factura:", numberField, "Fecha (YYYY-MM-DD):", dateField},
+                {"Cliente:", clientCombo, "Trabajador:", workerCombo},
+                {"Base Imponible:", baseAmountField, "IVA:", ivaCombo},
+                {"Total:", totalAmountField, "Pagada:", isPaidCheckBox},
+                {"Forma de Pago:", paymentMethodCombo, "Fecha de Pago:", paymentDateField}
+        };
+
+        for (int row = 0; row < rows.length; row++) {
+            addLabelAndField(formPanel, gbc,
+                    (String) rows[row][0], (Component) rows[row][1],
+                    (String) rows[row][2], (Component) rows[row][3], row);
+        }
 
         tableModel = new DefaultTableModel(
                 new String[]{"ID", "Código", "Nombre", "Precio", "Stock", "Cantidad"}, 0) {
@@ -117,6 +124,24 @@ public class CreateInvoiceForm extends JDialog {
         } catch (SQLException e) {
             showError("clientes", e);
         }
+    }
+
+    private void addLabelAndField(JPanel panel, GridBagConstraints gbc, String label1, Component comp1,
+                                  String label2, Component comp2, int row) {
+        gbc.gridy = row;
+
+        gbc.gridx = 0;
+        gbc.weightx = 0.5;
+        panel.add(new JLabel(label1), gbc);
+
+        gbc.gridx = 1;
+        panel.add(comp1, gbc);
+
+        gbc.gridx = 2;
+        panel.add(new JLabel(label2), gbc);
+
+        gbc.gridx = 3;
+        panel.add(comp2, gbc);
     }
 
     private void loadWorkers() {
