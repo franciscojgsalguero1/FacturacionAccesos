@@ -11,7 +11,7 @@ import java.sql.SQLException;
 
 public class CreateIVATypesForm extends JDialog {
     private final JPanel parentPanel;
-    private final JTextField amountField = new JTextField(10);
+    private final JTextField amountField = new JTextField(6);
     private final JTextField descriptionField = new JTextField(20);
 
     public CreateIVATypesForm(JPanel parentPanel) {
@@ -22,12 +22,16 @@ public class CreateIVATypesForm extends JDialog {
         setModal(true);
         setLocationRelativeTo(parentPanel);
 
-        JPanel formPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+        // Panel principal con GridBagLayout
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
 
-        formPanel.add(new JLabel("Porcentaje de IVA:"));
-        formPanel.add(amountField);
-        formPanel.add(new JLabel("Descripción:"));
-        formPanel.add(descriptionField);
+        int y = 0;
+        addLabelAndField(formPanel, gbc, "Porcentaje de IVA:", amountField, y++);
+        addLabelAndField(formPanel, gbc, "Descripción:", descriptionField, y);
 
         JButton saveButton = new JButton("Guardar");
         saveButton.addActionListener(e -> saveIVATypes());
@@ -43,6 +47,16 @@ public class CreateIVATypesForm extends JDialog {
         add(buttonPanel, BorderLayout.SOUTH);
 
         setVisible(true);
+    }
+
+    private void addLabelAndField(JPanel panel, GridBagConstraints gbc, String label1, JTextField field1, int row) {
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.5;
+        panel.add(new JLabel(label1), gbc);
+
+        gbc.gridx = 1;
+        panel.add(field1, gbc);
     }
 
     private void saveIVATypes() {

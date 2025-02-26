@@ -13,52 +13,41 @@ public class CreateClientForm extends JDialog {
     private final JPanel parentPanel;
     private final JTextField nameField = new JTextField(20);
     private final JTextField addressField = new JTextField(20);
-    private final JTextField postCodeField = new JTextField(10);
+    private final JTextField postCodeField = new JTextField(5);
     private final JTextField townField = new JTextField(20);
     private final JTextField provinceField = new JTextField(20);
     private final JTextField countryField = new JTextField(20);
-    private final JTextField cifField = new JTextField(20);
-    private final JTextField phoneField = new JTextField(20);
+    private final JTextField cifField = new JTextField(9);
+    private final JTextField phoneField = new JTextField(15);
     private final JTextField emailField = new JTextField(20);
-    private final JTextField ibanField = new JTextField(20);
-    private final JTextField riskField = new JTextField(10);
-    private final JTextField discountField = new JTextField(10);
+    private final JTextField ibanField = new JTextField(16);
+    private final JTextField riskField = new JTextField(4);
+    private final JTextField discountField = new JTextField(4);
 
     public CreateClientForm(JPanel parentPanel) {
         this.parentPanel = parentPanel;
         setTitle("Crear Cliente");
-        setSize(400, 500);
+        setSize(800, 300);
         setLayout(new BorderLayout());
         setModal(true);
         setLocationRelativeTo(parentPanel);
 
-        JPanel formPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+        // Panel principal con GridBagLayout
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
 
-        formPanel.add(new JLabel("Nombre:"));
-        formPanel.add(nameField);
-        formPanel.add(new JLabel("Dirección:"));
-        formPanel.add(addressField);
-        formPanel.add(new JLabel("Código Postal:"));
-        formPanel.add(postCodeField);
-        formPanel.add(new JLabel("Ciudad:"));
-        formPanel.add(townField);
-        formPanel.add(new JLabel("Provincia:"));
-        formPanel.add(provinceField);
-        formPanel.add(new JLabel("País:"));
-        formPanel.add(countryField);
-        formPanel.add(new JLabel("CIF:"));
-        formPanel.add(cifField);
-        formPanel.add(new JLabel("Teléfono:"));
-        formPanel.add(phoneField);
-        formPanel.add(new JLabel("Email:"));
-        formPanel.add(emailField);
-        formPanel.add(new JLabel("IBAN:"));
-        formPanel.add(ibanField);
-        formPanel.add(new JLabel("Riesgo:"));
-        formPanel.add(riskField);
-        formPanel.add(new JLabel("Descuento:"));
-        formPanel.add(discountField);
+        int y = 0;
+        addLabelAndField(formPanel, gbc, "Nombre:", nameField, "Dirección:", addressField, y++);
+        addLabelAndField(formPanel, gbc, "Ciudad:", townField, "Provincia:", provinceField,  y++);
+        addLabelAndField(formPanel, gbc,  "País:", countryField,"Código Postal:", postCodeField, y++);
+        addLabelAndField(formPanel, gbc, "CIF:", cifField, "Teléfono:", phoneField, y++);
+        addLabelAndField(formPanel, gbc, "Email:", emailField, "IBAN:", ibanField, y++);
+        addLabelAndField(formPanel, gbc, "Riesgo:", riskField, "Descuento:", discountField, y++);
 
+        // Panel de botones
         JButton saveButton = new JButton("Guardar");
         saveButton.addActionListener(e -> saveClient());
 
@@ -73,6 +62,22 @@ public class CreateClientForm extends JDialog {
         add(buttonPanel, BorderLayout.SOUTH);
 
         setVisible(true);
+    }
+
+    private void addLabelAndField(JPanel panel, GridBagConstraints gbc, String label1, JTextField field1, String label2, JTextField field2, int row) {
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.5;
+        panel.add(new JLabel(label1), gbc);
+
+        gbc.gridx = 1;
+        panel.add(field1, gbc);
+
+        gbc.gridx = 2;
+        panel.add(new JLabel(label2), gbc);
+
+        gbc.gridx = 3;
+        panel.add(field2, gbc);
     }
 
     private void saveClient() {

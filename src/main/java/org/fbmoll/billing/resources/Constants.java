@@ -17,6 +17,7 @@ public final class Constants {
     // ========== Entity Types (For Form Mapping) ==========
     public static final String FIELD_CLIENTS = "Clientes";
     public static final String FIELD_INVOICES = "Facturas";
+    public static final String FIELD_INVOICE = "Factura";
     public static final String FIELD_ARTICLES = "Artículos";
     public static final String FIELD_PROVIDERS = "Proveedores";
     public static final String FIELD_SELLERS = "Comerciales";

@@ -27,16 +27,19 @@ public class View extends JFrame implements ActionListener {
         JMenuBar menuBar = new JMenuBar();
         JMenu recordsMenu = new JMenu(Constants.FIELD_CLIENTS);
         JMenu invoicesMenu = new JMenu(Constants.FIELD_INVOICES);
+        JMenu correctiveInvoices = new JMenu(Constants.FIELD_CORRECTIVE);
         JMenu configurationMenu = new JMenu(Constants.FIELD_CONFIGURATION);
         JMenu helpMenu = new JMenu(Constants.FIELD_HELP);
 
         createRecordsMenu(recordsMenu);
         createInvoicesMenu(invoicesMenu);
+        createCorrectiveInvoicesMenu(correctiveInvoices);
         createConfigurationMenu(configurationMenu);
         createHelpMenu(helpMenu);
 
         menuBar.add(recordsMenu);
         menuBar.add(invoicesMenu);
+        menuBar.add(correctiveInvoices);
         menuBar.add(configurationMenu);
         menuBar.add(helpMenu);
 
@@ -54,7 +57,11 @@ public class View extends JFrame implements ActionListener {
     }
 
     private void createInvoicesMenu(JMenu menu) {
-        addMenuItems(menu, Constants.BUTTON_CREATE + Constants.FIELD_INVOICES, Constants.FIELD_SEE_INVOICE);
+        addMenuItems(menu, Constants.FIELD_SEE_INVOICE);
+    }
+
+    private void createCorrectiveInvoicesMenu(JMenu menu) {
+        addMenuItems(menu, Constants.FIELD_SEE_CORRECTIVE);
     }
 
     private void createConfigurationMenu(JMenu menu) {
@@ -116,7 +123,7 @@ public class View extends JFrame implements ActionListener {
         } else if (Constants.IVA_DELETE.equals(e.getActionCommand()) && source instanceof IVATypes ivaTypes) {
             ivaTypes.deleteIVATypes(mainPanel, ivaTypes.getId());
         } else if (Constants.INVOICE_VIEW.equals(e.getActionCommand()) && source instanceof Invoice invoice) {
-            //invoice.viewInvoice(mainPanel, this);
+            new ViewInvoice(mainPanel, invoice.getId());
         } else if (Constants.INVOICE_EDIT.equals(e.getActionCommand()) && source instanceof Invoice invoice) {
             invoice.modifyInvoiceAction(mainPanel, this);
         } else if (Constants.INVOICE_DELETE.equals(e.getActionCommand()) && source instanceof Invoice invoice) {

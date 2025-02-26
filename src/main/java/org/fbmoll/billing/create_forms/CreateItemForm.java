@@ -11,45 +11,37 @@ import java.sql.SQLException;
 
 public class CreateItemForm extends JDialog {
     private final JPanel parentPanel;
-    private final JTextField codeField = new JTextField(20);
-    private final JTextField barCodeField = new JTextField(20);
-    private final JTextField descriptionField = new JTextField(20);
-    private final JTextField familyIdField = new JTextField(10);
-    private final JTextField costField = new JTextField(10);
-    private final JTextField marginField = new JTextField(10);
-    private final JTextField priceField = new JTextField(10);
-    private final JTextField supplierField = new JTextField(10);
-    private final JTextField stockField = new JTextField(10);
+    private final JTextField codeField = new JTextField(6);
+    private final JTextField barCodeField = new JTextField(9);
+    private final JTextField descriptionField = new JTextField(12);
+    private final JTextField familyIdField = new JTextField(3);
+    private final JTextField costField = new JTextField(5);
+    private final JTextField marginField = new JTextField(5);
+    private final JTextField priceField = new JTextField(6);
+    private final JTextField supplierField = new JTextField(3);
+    private final JTextField stockField = new JTextField(5);
 
     public CreateItemForm(JPanel parentPanel) {
         this.parentPanel = parentPanel;
         setTitle("Crear Artículo");
-        setSize(400, 500);
+        setSize(800, 300);
         setLayout(new BorderLayout());
         setModal(true);
         setLocationRelativeTo(parentPanel);
 
-        JPanel formPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+        // Panel principal con GridBagLayout
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
 
-        formPanel.add(new JLabel("Código:"));
-        formPanel.add(codeField);
-        formPanel.add(new JLabel("Código de Barras:"));
-        formPanel.add(barCodeField);
-        formPanel.add(new JLabel("Descripción:"));
-        formPanel.add(descriptionField);
-        formPanel.add(new JLabel("ID Familia:"));
-        formPanel.add(familyIdField);
-        formPanel.add(new JLabel("Costo:"));
-        formPanel.add(costField);
-        formPanel.add(new JLabel("Margen:"));
-        formPanel.add(marginField);
-        formPanel.add(new JLabel("Precio:"));
-        formPanel.add(priceField);
-        formPanel.add(new JLabel("Proveedor:"));
-        formPanel.add(supplierField);
-        formPanel.add(new JLabel("Stock:"));
-        formPanel.add(stockField);
+        int y = 0;
+        addLabelAndField(formPanel, gbc, "Código:", codeField, "Código de Barras:", barCodeField, "Descripción:", descriptionField, y++);
+        addLabelAndField(formPanel, gbc, "ID Familia:", familyIdField, "Costo:", costField, "Margen:", marginField, y++);
+        addLabelAndField(formPanel, gbc, "Precio:", priceField,"Proveedor:", supplierField, "Stock:", stockField, y++);
 
+        // Panel de botones
         JButton saveButton = new JButton("Guardar");
         saveButton.addActionListener(e -> saveItem());
 
@@ -64,6 +56,28 @@ public class CreateItemForm extends JDialog {
         add(buttonPanel, BorderLayout.SOUTH);
 
         setVisible(true);
+    }
+
+    private void addLabelAndField(JPanel panel, GridBagConstraints gbc, String label1, JTextField field1, String label2, JTextField field2, String label3, JTextField field3, int row) {
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.5;
+        panel.add(new JLabel(label1), gbc);
+
+        gbc.gridx = 1;
+        panel.add(field1, gbc);
+
+        gbc.gridx = 2;
+        panel.add(new JLabel(label2), gbc);
+
+        gbc.gridx = 3;
+        panel.add(field2, gbc);
+
+        gbc.gridx = 4;
+        panel.add(new JLabel(label3), gbc);
+
+        gbc.gridx = 5;
+        panel.add(field3, gbc);
     }
 
     private void saveItem() {

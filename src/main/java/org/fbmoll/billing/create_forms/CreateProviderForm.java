@@ -13,45 +13,36 @@ public class CreateProviderForm extends JDialog {
     private final JPanel parentPanel;
     private final JTextField nameField = new JTextField(20);
     private final JTextField addressField = new JTextField(20);
-    private final JTextField postCodeField = new JTextField(10);
+    private final JTextField postCodeField = new JTextField(5);
     private final JTextField townField = new JTextField(20);
     private final JTextField provinceField = new JTextField(20);
     private final JTextField countryField = new JTextField(20);
-    private final JTextField cifField = new JTextField(20);
-    private final JTextField phoneField = new JTextField(20);
+    private final JTextField cifField = new JTextField(9);
+    private final JTextField phoneField = new JTextField(15);
     private final JTextField emailField = new JTextField(20);
     private final JTextField websiteField = new JTextField(20);
 
     public CreateProviderForm(JPanel parentPanel) {
         this.parentPanel = parentPanel;
         setTitle("Crear Proveedor");
-        setSize(400, 500);
+        setSize(800, 300);
         setLayout(new BorderLayout());
         setModal(true);
         setLocationRelativeTo(parentPanel);
 
-        JPanel formPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+        // Panel principal con GridBagLayout
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
 
-        formPanel.add(new JLabel("Nombre:"));
-        formPanel.add(nameField);
-        formPanel.add(new JLabel("Dirección:"));
-        formPanel.add(addressField);
-        formPanel.add(new JLabel("Código Postal:"));
-        formPanel.add(postCodeField);
-        formPanel.add(new JLabel("Ciudad:"));
-        formPanel.add(townField);
-        formPanel.add(new JLabel("Provincia:"));
-        formPanel.add(provinceField);
-        formPanel.add(new JLabel("País:"));
-        formPanel.add(countryField);
-        formPanel.add(new JLabel("CIF:"));
-        formPanel.add(cifField);
-        formPanel.add(new JLabel("Teléfono:"));
-        formPanel.add(phoneField);
-        formPanel.add(new JLabel("Email:"));
-        formPanel.add(emailField);
-        formPanel.add(new JLabel("Web:"));
-        formPanel.add(websiteField);
+        int y = 0;
+        addLabelAndField(formPanel, gbc, "Nombre:", nameField, "Dirección:", addressField, y++);
+        addLabelAndField(formPanel, gbc, "Ciudad:", townField, "Provincia:", provinceField,  y++);
+        addLabelAndField(formPanel, gbc,  "País:", countryField,"Código Postal:", postCodeField, y++);
+        addLabelAndField(formPanel, gbc, "CIF:", cifField, "Teléfono:", phoneField, y++);
+        addLabelAndField(formPanel, gbc, "Email:", emailField, "Web:", websiteField, y);
 
         JButton saveButton = new JButton("Guardar");
         saveButton.addActionListener(e -> saveProvider());
@@ -67,6 +58,22 @@ public class CreateProviderForm extends JDialog {
         add(buttonPanel, BorderLayout.SOUTH);
 
         setVisible(true);
+    }
+
+    private void addLabelAndField(JPanel panel, GridBagConstraints gbc, String label1, JTextField field1, String label2, JTextField field2, int row) {
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.5;
+        panel.add(new JLabel(label1), gbc);
+
+        gbc.gridx = 1;
+        panel.add(field1, gbc);
+
+        gbc.gridx = 2;
+        panel.add(new JLabel(label2), gbc);
+
+        gbc.gridx = 3;
+        panel.add(field2, gbc);
     }
 
     private void saveProvider() {

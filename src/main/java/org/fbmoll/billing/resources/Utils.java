@@ -6,8 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
+import javax.swing.table.*;
 import java.awt.*;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -56,15 +55,22 @@ public class Utils {
 
     public static JScrollPane resizeTableColumns(JTable table) {
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        JTableHeader header = table.getTableHeader();
+        TableColumnModel columnModel = table.getColumnModel();
 
         for (int column = 0; column < table.getColumnCount(); column++) {
-            TableColumn tableColumn = table.getColumnModel().getColumn(column);
+            TableColumn tableColumn = columnModel.getColumn(column);
             int preferredWidth = tableColumn.getMinWidth();
             int maxWidth = tableColumn.getMaxWidth();
 
+            TableCellRenderer headerRenderer = table.getTableHeader().getDefaultRenderer();
+            Component headerComp = headerRenderer.getTableCellRendererComponent(table, tableColumn.getHeaderValue(),
+                    false, false, -1, column);
+            preferredWidth = Math.max(preferredWidth, headerComp.getPreferredSize().width + 15);
+
             for (int row = 0; row < table.getRowCount(); row++) {
-                Component comp = table.prepareRenderer(table.getCellRenderer(row, column), row, column);
-                preferredWidth = Math.max(comp.getPreferredSize().width + 10, preferredWidth);
+                Component cellComp = table.prepareRenderer(table.getCellRenderer(row, column), row, column);
+                preferredWidth = Math.max(preferredWidth, cellComp.getPreferredSize().width + 10);
 
                 if (preferredWidth >= maxWidth) {
                     preferredWidth = maxWidth;
@@ -73,6 +79,11 @@ public class Utils {
             }
 
             tableColumn.setPreferredWidth(preferredWidth);
+        }
+
+        if (header != null) {
+            header.setResizingAllowed(false);
+            header.setReorderingAllowed(false);
         }
 
         return new JScrollPane(table);
