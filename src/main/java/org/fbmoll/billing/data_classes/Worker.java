@@ -237,7 +237,7 @@ public class Worker {
         topPanel.add(searchField);
 
         createButton.addActionListener(e -> new CreateWorkerForm(panel));
-        JTable table = setupWorkerTable(workers, listener, panel);
+        JTable table = setupWorkerTable(workers, listener);
         JScrollPane tablePane = new JScrollPane(Utils.resizeTableColumns(table));
 
         DefaultTableModel model = (DefaultTableModel) table.getModel();
@@ -266,7 +266,7 @@ public class Worker {
         });
     }
 
-    private static JTable setupWorkerTable(List<Worker> workers, ActionListener listener, JPanel panel) {
+    private static JTable setupWorkerTable(List<Worker> workers, ActionListener listener) {
         String[] columnNames = {
                 "ID", "Nombre", "Dirección", "Código Postal", "Ciudad", "Provincia", "País",
                 "DNI", "Teléfono", "Email", "Puesto", "Salario", "Comisión %",
@@ -300,8 +300,10 @@ public class Worker {
         table.getColumn(Constants.BUTTON_EDIT).setCellRenderer(new ButtonRenderer());
         table.getColumn(Constants.BUTTON_DELETE).setCellRenderer(new ButtonRenderer());
 
-        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(new JCheckBox(), listener, workers, panel, Constants.WORKER_EDIT));
-        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(new JCheckBox(), listener, workers, panel, Constants.WORKER_DELETE));
+        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(listener, workers,
+                Constants.WORKER_EDIT));
+        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(listener, workers,
+                Constants.WORKER_DELETE));
 
         return table;
     }

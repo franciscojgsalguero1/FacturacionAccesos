@@ -77,7 +77,7 @@ public class Provider {
         topPanel.add(searchField);
 
         createButton.addActionListener(e -> new CreateProviderForm(panel));
-        JTable table = setupProviderTable(providers, listener, panel);
+        JTable table = setupProviderTable(providers, listener);
         JScrollPane tablePane = new JScrollPane(Utils.resizeTableColumns(table));
 
         DefaultTableModel model = (DefaultTableModel) table.getModel();
@@ -136,7 +136,7 @@ public class Provider {
         return providers;
     }
 
-    private static JTable setupProviderTable(List<Provider> providers, ActionListener listener, JPanel panel) {
+    private static JTable setupProviderTable(List<Provider> providers, ActionListener listener) {
         String[] columnNames = {"ID", "Nombre", "Dirección", "Código Postal", "Ciudad", "Provincia", "País",
                 "CIF", "Teléfono", "Email", "Web", Constants.BUTTON_EDIT, Constants.BUTTON_DELETE};
 
@@ -166,10 +166,10 @@ public class Provider {
 
         table.getColumn(Constants.BUTTON_EDIT).setCellRenderer(new ButtonRenderer());
         table.getColumn(Constants.BUTTON_DELETE).setCellRenderer(new ButtonRenderer());
-        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(new JCheckBox(),
-                listener, providers, panel, Constants.PROVIDER_EDIT));
-        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(new JCheckBox(),
-                listener, providers, panel, Constants.PROVIDER_DELETE));
+        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(listener, providers,
+                Constants.PROVIDER_EDIT));
+        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(listener, providers,
+                Constants.PROVIDER_DELETE));
 
         return table;
     }

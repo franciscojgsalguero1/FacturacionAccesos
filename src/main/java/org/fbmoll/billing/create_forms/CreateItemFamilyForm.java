@@ -28,9 +28,8 @@ public class CreateItemFamilyForm extends JDialog {
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.WEST;
 
-        int y = 0;
-        addLabelAndField(formPanel, gbc, "Código:", codeField, y++);
-        addLabelAndField(formPanel, gbc, "Descripción:", descriptionField, y);
+        addLabelAndField(formPanel, gbc, "Código:", codeField, 0);
+        addLabelAndField(formPanel, gbc, "Descripción:", descriptionField, 1);
 
         JButton saveButton = new JButton("Guardar");
         saveButton.addActionListener(e -> saveItemFamily());

@@ -22,16 +22,14 @@ public class CreateIVATypesForm extends JDialog {
         setModal(true);
         setLocationRelativeTo(parentPanel);
 
-        // Panel principal con GridBagLayout
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.WEST;
 
-        int y = 0;
-        addLabelAndField(formPanel, gbc, "Porcentaje de IVA:", amountField, y++);
-        addLabelAndField(formPanel, gbc, "Descripción:", descriptionField, y);
+        addLabelAndField(formPanel, gbc, "Porcentaje de IVA:", amountField, 0);
+        addLabelAndField(formPanel, gbc, "Descripción:", descriptionField, 1);
 
         JButton saveButton = new JButton("Guardar");
         saveButton.addActionListener(e -> saveIVATypes());

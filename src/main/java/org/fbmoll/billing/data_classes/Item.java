@@ -177,10 +177,10 @@ public class Item {
         table.getColumn(Constants.BUTTON_EDIT).setCellRenderer(new ButtonRenderer());
         table.getColumn(Constants.BUTTON_DELETE).setCellRenderer(new ButtonRenderer());
 
-        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(new JCheckBox(),
-                listener, items, panel, Constants.ARTICLE_EDIT));
-        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(new JCheckBox(),
-                listener, items, panel, Constants.ARTICLE_DELETE));
+        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(listener, items,
+                Constants.ARTICLE_EDIT));
+        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(listener, items,
+                Constants.ARTICLE_DELETE));
 
         return table;
     }

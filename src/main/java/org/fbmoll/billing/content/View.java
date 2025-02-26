@@ -26,10 +26,10 @@ public class View extends JFrame implements ActionListener {
 
         JMenuBar menuBar = new JMenuBar();
         JMenu recordsMenu = new JMenu(Constants.FIELD_CLIENTS);
-        JMenu invoicesMenu = new JMenu(Constants.FIELD_INVOICES);
-        JMenu correctiveInvoices = new JMenu(Constants.FIELD_CORRECTIVE);
-        JMenu configurationMenu = new JMenu(Constants.FIELD_CONFIGURATION);
-        JMenu helpMenu = new JMenu(Constants.FIELD_HELP);
+        JMenu invoicesMenu = new JMenu("Facturas");
+        JMenu correctiveInvoices = new JMenu("Rectificativas");
+        JMenu configurationMenu = new JMenu("Configuración");
+        JMenu helpMenu = new JMenu("Ayuda");
 
         createRecordsMenu(recordsMenu);
         createInvoicesMenu(invoicesMenu);
@@ -52,24 +52,24 @@ public class View extends JFrame implements ActionListener {
     }
 
     private void createRecordsMenu(JMenu menu) {
-        addMenuItems(menu, Constants.FIELD_CLIENTS, Constants.FIELD_ARTICLES, Constants.FIELD_PROVIDERS,
-                Constants.FIELD_WORKERS, Constants.FIELD_IVA_TYPES, Constants.FIELD_FAMILIES);
+        addMenuItems(menu, Constants.FIELD_CLIENTS, "Artículos", "Proveedores",
+                "Trabajadores", "Tipos IVA", "Familias");
     }
 
     private void createInvoicesMenu(JMenu menu) {
-        addMenuItems(menu, Constants.FIELD_SEE_INVOICE);
+        addMenuItems(menu, "Ver Facturas");
     }
 
     private void createCorrectiveInvoicesMenu(JMenu menu) {
-        addMenuItems(menu, Constants.FIELD_SEE_CORRECTIVE);
+        addMenuItems(menu, "Ver Rectificativas");
     }
 
     private void createConfigurationMenu(JMenu menu) {
-        addMenuItems(menu, Constants.FIELD_EMPLOYER_DATA);
+        addMenuItems(menu, "Datos de la Empresa");
     }
 
     private void createHelpMenu(JMenu menu) {
-        addMenuItems(menu, Constants.FIELD_USER_GUIDE, Constants.FIELD_ABOUT);
+        addMenuItems(menu, "Manual de Usuario", "Acerca de");
     }
 
     private void addMenuItems(JMenu menu, String... items) {
@@ -96,11 +96,11 @@ public class View extends JFrame implements ActionListener {
     private void handleMenuItemAction(String itemText) {
         Map<String, Runnable> menuActions = Map.of(
                 Constants.FIELD_CLIENTS, () -> Client.showClientTable(mainPanel, this),
-                Constants.FIELD_ARTICLES, () -> Item.showItemTable(mainPanel, this),
-                Constants.FIELD_PROVIDERS, () -> Provider.showProviderTable(mainPanel, this),
-                Constants.FIELD_WORKERS, () -> Worker.showWorkerTable(mainPanel, this),
-                Constants.FIELD_FAMILIES, () -> ItemFamily.showItemFamilyTable(mainPanel, this),
-                Constants.FIELD_IVA_TYPES, () -> IVATypes.showIVATypesTable(mainPanel, this),
+                "Artículos", () -> Item.showItemTable(mainPanel, this),
+                "Proveedores", () -> Provider.showProviderTable(mainPanel, this),
+                "Trabajadores", () -> Worker.showWorkerTable(mainPanel, this),
+                "Familias", () -> ItemFamily.showItemFamilyTable(mainPanel, this),
+                "Tipos IVA", () -> IVATypes.showIVATypesTable(mainPanel, this),
                 "Ver Facturas", () -> Invoice.showInvoiceTable(mainPanel, this),
                 "Ver Rectificativas", () -> CorrectiveInvoice.showCorrectiveInvoiceTable(mainPanel, this)
         );
@@ -188,7 +188,6 @@ public class View extends JFrame implements ActionListener {
     private void handleCorrectiveInvoiceActions(CorrectiveInvoice invoice, String actionCommand) {
         switch (actionCommand) {
             case Constants.INVOICE_VIEW -> new ViewCorrectiveInvoice(mainPanel, invoice.getId());
-            case Constants.INVOICE_EDIT -> invoice.modifyCorrectiveInvoiceAction(mainPanel, this);
             case Constants.INVOICE_DELETE -> invoice.deleteCorrectiveInvoice(mainPanel, invoice.getId());
             default -> throw new IllegalStateException("Unexpected value: " + actionCommand);
         }

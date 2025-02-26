@@ -76,20 +76,19 @@ public class Invoice {
         // Filter Options
         String[] filterOptions = {
                 "ID", "Número", "Fecha", "ID Cliente", "ID Trabajador",
-                "Base Imponible", "IVA", "Total", "Pagada", "Forma de Pago", "Fecha de Pago"
+                "Base Imponible", "IVA", "Total", Constants.PAID, "Forma de Pago", "Fecha de Pago"
         };
 
         JComboBox<String> filterDropdown = new JComboBox<>(filterOptions);
         JTextField searchField = new JTextField(20);
         searchField.setToolTipText("Buscar factura...");
 
-        // Add components to topPanel
         topPanel.add(createButton);
         topPanel.add(new JLabel("Filtrar por:"));
         topPanel.add(filterDropdown);
         topPanel.add(searchField);
 
-        JTable table = setupInvoiceTable(invoices, listener, panel);
+        JTable table = setupInvoiceTable(invoices, listener);
         JScrollPane tablePane = new JScrollPane(Utils.resizeTableColumns(table));
 
         DefaultTableModel model = (DefaultTableModel) table.getModel();
@@ -111,7 +110,7 @@ public class Invoice {
 
             private void applyFilter() {
                 String text = searchField.getText().trim();
-                int columnIndex = filterDropdown.getSelectedIndex(); // Match dropdown index with table columns
+                int columnIndex = filterDropdown.getSelectedIndex();
                 sorter.setRowFilter(RowFilter.regexFilter("(?i)" + text, columnIndex));
             }
         });
@@ -169,15 +168,15 @@ public class Invoice {
                 ));
             }
         } catch (SQLException e) {
-            logger.error("Error al obtener facturas: " + e.getMessage());
+            logger.error(String.format("Error al obtener facturas: %s", e.getMessage()));
         }
         return invoices;
     }
 
-    private static JTable setupInvoiceTable(List<Invoice> invoices, ActionListener listener, JPanel panel) {
+    private static JTable setupInvoiceTable(List<Invoice> invoices, ActionListener listener) {
         String[] columnNames = {
                 "ID", "Número", "Fecha", "ID Cliente", "ID Trabajador",
-                "Base Imponible", "IVA", "Total", "Pagada", "Rectificada", "Forma de Pago", "Fecha de Pago",
+                "Base Imponible", "IVA", "Total", Constants.PAID, "Rectificada", "Forma de Pago", "Fecha de Pago",
                 "Ver", "Editar", "Eliminar"
         };
 
@@ -201,7 +200,8 @@ public class Invoice {
                     inv.getInvoicePaymentDTO().isPaid() ? "Sí" : "No",
                     inv.getInvoicePaymentDTO().isCorrected() ? "Sí" : "No",
                     inv.getInvoicePaymentDTO().getPaymentMethod(),
-                    (inv.getInvoicePaymentDTO().getPaymentDate() != null) ? inv.getInvoicePaymentDTO().getPaymentDate() : "No registrada",
+                    (inv.getInvoicePaymentDTO().getPaymentDate() != null) ?
+                            inv.getInvoicePaymentDTO().getPaymentDate() : "No registrada",
                     viewButton,
                     editButton,
                     deleteButton
@@ -223,9 +223,11 @@ public class Invoice {
         table.getColumn(Constants.BUTTON_EDIT).setCellRenderer(new ButtonRenderer());
         table.getColumn(Constants.BUTTON_DELETE).setCellRenderer(new ButtonRenderer());
 
-        table.getColumn("Ver").setCellEditor(new ButtonEditor<>(new JCheckBox(), listener, invoices, panel, Constants.INVOICE_VIEW));
-        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(new JCheckBox(), listener, invoices, panel, Constants.INVOICE_EDIT));
-        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(new JCheckBox(), listener, invoices, panel, Constants.INVOICE_DELETE));
+        table.getColumn("Ver").setCellEditor(new ButtonEditor<>( listener, invoices, Constants.INVOICE_VIEW));
+        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(listener, invoices,
+                Constants.INVOICE_EDIT));
+        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(listener, invoices,
+                Constants.INVOICE_DELETE));
 
         return table;
     }
@@ -310,7 +312,7 @@ public class Invoice {
         JTextField totalAmountField = new JTextField(String.valueOf(this.getInvoicePaymentDTO().getTotalAmount()));
         totalAmountField.setEditable(false);
 
-        JCheckBox isPaidCheckBox = new JCheckBox("Pagada", this.getInvoicePaymentDTO().isPaid());
+        JCheckBox isPaidCheckBox = new JCheckBox(Constants.PAID, this.getInvoicePaymentDTO().isPaid());
         JTextField paymentMethodField = new JTextField(String.valueOf(this.getInvoicePaymentDTO().getPaymentMethod()));
         JTextField paymentDateField = new JTextField(
                 this.getInvoicePaymentDTO().getPaymentDate() != null ? this.getInvoicePaymentDTO().getPaymentDate().toString() : ""

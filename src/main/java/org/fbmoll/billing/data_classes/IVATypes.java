@@ -72,7 +72,7 @@ public class IVATypes {
         topPanel.add(searchField);
 
         createButton.addActionListener(e -> new CreateIVATypesForm(panel));
-        JTable table = setupIVATypesTable(ivaTypes, listener, panel);
+        JTable table = setupIVATypesTable(ivaTypes, listener);
         JScrollPane tablePane = new JScrollPane(Utils.resizeTableColumns(table));
 
         DefaultTableModel model = (DefaultTableModel) table.getModel();
@@ -101,7 +101,7 @@ public class IVATypes {
         });
     }
 
-    private static JTable setupIVATypesTable(List<IVATypes> ivaTypes, ActionListener listener, JPanel panel) {
+    private static JTable setupIVATypesTable(List<IVATypes> ivaTypes, ActionListener listener) {
         String[] columnNames = {"ID", "Porcentaje", "Descripción", Constants.BUTTON_EDIT, Constants.BUTTON_DELETE};
 
         Object[][] data = new Object[ivaTypes.size()][columnNames.length];
@@ -124,10 +124,10 @@ public class IVATypes {
 
         table.getColumn(Constants.BUTTON_EDIT).setCellRenderer(new ButtonRenderer());
         table.getColumn(Constants.BUTTON_DELETE).setCellRenderer(new ButtonRenderer());
-        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(new JCheckBox(),
-                listener, ivaTypes, panel, Constants.IVA_EDIT));
-        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(new JCheckBox(),
-                listener, ivaTypes, panel, Constants.IVA_DELETE));
+        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(listener, ivaTypes,
+                Constants.IVA_EDIT));
+        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(listener, ivaTypes,
+                Constants.IVA_DELETE));
 
         return table;
     }

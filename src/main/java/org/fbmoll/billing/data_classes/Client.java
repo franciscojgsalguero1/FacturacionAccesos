@@ -69,9 +69,7 @@ public class Client {
         JButton createButton = new JButton("Crear Cliente");
 
         String[] filterOptions = {
-                Constants.LABEL_CLIENT_NAME, Constants.LABEL_CLIENT_ADDRESS, Constants.LABEL_CLIENT_POSTCODE,
-                Constants.LABEL_CITY, Constants.LABEL_CLIENT_PROVINCE, Constants.LABEL_CLIENT_COUNTRY,
-                Constants.LABEL_CLIENT_CIF, Constants.LABEL_CLIENT_PHONE, Constants.LABEL_CLIENT_EMAIL
+                "Nombre", "Dirección", "Código Postal", "Ciudad", "Provincia", "País", "CIF", "Teléfono", "Email"
         };
 
         JComboBox<String> filterDropdown = new JComboBox<>(filterOptions);
@@ -84,7 +82,7 @@ public class Client {
         topPanel.add(searchField);
 
         createButton.addActionListener(e -> new CreateClientForm(panel));
-        JTable table = setupClientTable(clients, listener, panel);
+        JTable table = setupClientTable(clients, listener);
         JScrollPane tablePane = new JScrollPane(Utils.resizeTableColumns(table));
 
         DefaultTableModel model = (DefaultTableModel) table.getModel();
@@ -154,12 +152,10 @@ public class Client {
         return clients;
     }
 
-    private static JTable setupClientTable(List<Client> clients, ActionListener listener, JPanel panel) {
+    private static JTable setupClientTable(List<Client> clients, ActionListener listener) {
         String[] columnNames = {
-                "ID", Constants.LABEL_CLIENT_NAME, Constants.LABEL_CLIENT_ADDRESS, Constants.LABEL_CLIENT_POSTCODE,
-                Constants.LABEL_CITY, Constants.LABEL_CLIENT_PROVINCE, Constants.LABEL_CLIENT_COUNTRY,
-                Constants.LABEL_CLIENT_CIF, Constants.LABEL_CLIENT_PHONE, Constants.LABEL_CLIENT_EMAIL,
-                Constants.LABEL_CLIENT_IBAN, Constants.LABEL_CLIENT_RISK, Constants.LABEL_CLIENT_DISCOUNT,
+                "ID", "Nombre", "Dirección", "Código Postal", "Ciudad", "Provincia", "País", "CIF", "Teléfono",
+                "Email", "IBAN", "Riesgo", "Descuento",
                 Constants.BUTTON_EDIT, Constants.BUTTON_DELETE
         };
 
@@ -189,10 +185,10 @@ public class Client {
 
         table.getColumn(Constants.BUTTON_EDIT).setCellRenderer(new ButtonRenderer());
         table.getColumn(Constants.BUTTON_DELETE).setCellRenderer(new ButtonRenderer());
-        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(new JCheckBox(),
-                listener, clients, panel, Constants.CLIENT_EDIT));
-        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(new JCheckBox(),
-                listener, clients, panel, Constants.CLIENT_DELETE));
+        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(listener,
+                clients, Constants.CLIENT_EDIT));
+        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(listener,
+                clients, Constants.CLIENT_DELETE));
 
         return table;
     }

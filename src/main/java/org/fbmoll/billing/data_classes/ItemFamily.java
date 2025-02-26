@@ -72,7 +72,7 @@ public class ItemFamily {
         topPanel.add(searchField);
 
         createButton.addActionListener(e -> new CreateItemFamilyForm(panel));
-        JTable table = setupItemFamilyTable(families, listener, panel);
+        JTable table = setupItemFamilyTable(families, listener);
         JScrollPane tablePane = new JScrollPane(Utils.resizeTableColumns(table));
 
         DefaultTableModel model = (DefaultTableModel) table.getModel();
@@ -101,7 +101,7 @@ public class ItemFamily {
         });
     }
 
-    private static JTable setupItemFamilyTable(List<ItemFamily> families, ActionListener listener, JPanel panel) {
+    private static JTable setupItemFamilyTable(List<ItemFamily> families, ActionListener listener) {
         String[] columnNames = {"ID", "Código", "Descripción", Constants.BUTTON_EDIT, Constants.BUTTON_DELETE};
 
         Object[][] data = new Object[families.size()][columnNames.length];
@@ -124,10 +124,10 @@ public class ItemFamily {
 
         table.getColumn(Constants.BUTTON_EDIT).setCellRenderer(new ButtonRenderer());
         table.getColumn(Constants.BUTTON_DELETE).setCellRenderer(new ButtonRenderer());
-        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(new JCheckBox(),
-                listener, families, panel, Constants.FAMILY_EDIT));
-        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(new JCheckBox(),
-                listener, families, panel, Constants.FAMILY_DELETE));
+        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(listener, families,
+                Constants.FAMILY_EDIT));
+        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(listener, families,
+                Constants.FAMILY_DELETE));
 
         return table;
     }
