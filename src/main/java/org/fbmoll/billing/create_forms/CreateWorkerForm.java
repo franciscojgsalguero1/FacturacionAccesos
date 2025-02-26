@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class CreateWorkerForm extends JDialog {
@@ -16,7 +17,8 @@ public class CreateWorkerForm extends JDialog {
     private final JTextField postCodeField = new JTextField(10);
     private final JTextField townField = new JTextField(20);
     private final JTextField provinceField = new JTextField(20);
-    private final JTextField countryField = new JTextField(20);
+    // Replace countryField with a JComboBox for countries
+    private final JComboBox<String> countryCombo = new JComboBox<>();
     private final JTextField dniField = new JTextField(15);
     private final JTextField phoneField = new JTextField(15);
     private final JTextField emailField = new JTextField(25);
@@ -32,8 +34,11 @@ public class CreateWorkerForm extends JDialog {
         setModal(true);
         setLocationRelativeTo(parentPanel);
 
-        JPanel formPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+        // Load countries from the database into the combo box
+        loadCountries();
 
+        // Use a GridLayout for a simple two-column form
+        JPanel formPanel = new JPanel(new GridLayout(0, 2, 5, 5));
         formPanel.add(new JLabel("Nombre:"));
         formPanel.add(nameField);
         formPanel.add(new JLabel("Dirección:"));
@@ -45,7 +50,7 @@ public class CreateWorkerForm extends JDialog {
         formPanel.add(new JLabel("Provincia:"));
         formPanel.add(provinceField);
         formPanel.add(new JLabel("País:"));
-        formPanel.add(countryField);
+        formPanel.add(countryCombo);
         formPanel.add(new JLabel("DNI:"));
         formPanel.add(dniField);
         formPanel.add(new JLabel("Teléfono:"));
@@ -75,6 +80,23 @@ public class CreateWorkerForm extends JDialog {
         setVisible(true);
     }
 
+    /**
+     * Loads the list of countries from the "countries" table (field "name") into the countryCombo.
+     */
+    private void loadCountries() {
+        String query = "SELECT name FROM countries ORDER BY name";
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                countryCombo.addItem(rs.getString("name"));
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error al cargar países: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     private void saveWorker() {
         try (Connection conn = Utils.getConnection();
              PreparedStatement ps = conn.prepareStatement(
@@ -87,7 +109,8 @@ public class CreateWorkerForm extends JDialog {
             ps.setInt(3, Integer.parseInt(postCodeField.getText()));
             ps.setString(4, townField.getText());
             ps.setString(5, provinceField.getText());
-            ps.setString(6, countryField.getText());
+            // Retrieve the selected country from the combo box
+            ps.setString(6, (String) countryCombo.getSelectedItem());
             ps.setString(7, dniField.getText());
             ps.setString(8, phoneField.getText());
             ps.setString(9, emailField.getText());
