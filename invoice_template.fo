@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format">
+    <fo:layout-master-set>
+        <fo:simple-page-master master-name="invoice" page-height="29.7cm" page-width="21cm" margin="1cm">
+            <fo:region-body/>
+        </fo:simple-page-master>
+    </fo:layout-master-set>
+    <fo:page-sequence master-reference="invoice">
+        <fo:flow flow-name="xsl-region-body">
+            <fo:block font-size="18pt" font-weight="bold" text-align="center">FACTURA</fo:block>
+            <fo:block>Fecha: {DATE}</fo:block>
+            <fo:block>N° Factura: {INVOICE_ID}</fo:block>
+            <fo:block>Total: {TOTAL_AMOUNT}€</fo:block>
+        </fo:flow>
+    </fo:page-sequence>
+</fo:root>

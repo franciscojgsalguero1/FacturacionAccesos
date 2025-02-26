@@ -178,7 +178,7 @@ public class View extends JFrame implements ActionListener {
 
     private void handleInvoiceActions(Invoice invoice, String actionCommand) {
         switch (actionCommand) {
-            case Constants.INVOICE_VIEW -> new ViewInvoice(mainPanel, invoice.getId());
+            case Constants.INVOICE_VIEW -> new ViewInvoice(mainPanel, this, invoice.getId());
             case Constants.INVOICE_DELETE -> invoice.deleteInvoice(mainPanel, invoice.getId(), this);
             default -> throw new IllegalStateException("Unexpected value: " + actionCommand);
         }
