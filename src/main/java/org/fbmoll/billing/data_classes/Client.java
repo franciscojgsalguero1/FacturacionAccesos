@@ -193,82 +193,6 @@ public class Client {
         return table;
     }
 
-    public void modifyClient(JPanel panel, Client newClient, int id) {
-        String query = "UPDATE clientes SET nombreCliente = ?, direccionCliente = ?, cpCliente = ?, " +
-                "poblacionCliente = ?, provinciaCliente = ?, paisCliente = ?, cifCliente = ?, telCliente = ?, " +
-                "emailCliente = ?, ibanCliente = ?, riesgoCliente = ?, descuentoCliente = ? WHERE idCliente = ?";
-
-        try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-            ps.setString(1, newClient.getPersonData().getName());
-            ps.setString(2, newClient.getAddress().getStreet());
-            ps.setInt(3, newClient.getAddress().getPostCode());
-            ps.setString(4, newClient.getAddress().getTown());
-            ps.setString(5, newClient.getAddress().getProvince());
-            ps.setString(6, newClient.getAddress().getCountry());
-            ps.setString(7, newClient.getPersonData().getCif());
-            ps.setString(8, newClient.getPersonData().getNumber());
-            ps.setString(9, newClient.getPersonData().getEmail());
-            ps.setString(10, newClient.getPersonData().getIban());
-            ps.setDouble(11, newClient.getRisk());
-            ps.setDouble(12, newClient.getDiscount());
-            ps.setInt(13, id);
-
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(panel, "Cliente actualizado con éxito.");
-            } else {
-                JOptionPane.showMessageDialog(panel, "No se pudo actualizar el cliente. Verifica el ID.",
-                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(panel, "Error al modificar cliente: " + e.getMessage(),
-                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-        }
-
-        SwingUtilities.invokeLater(() -> {
-            panel.removeAll();
-            Client.showClientTable(panel, e -> {
-            });
-            panel.revalidate();
-            panel.repaint();
-        });
-    }
-
-    public void deleteClient(JPanel panel, int id) {
-        int confirm = JOptionPane.showConfirmDialog(panel,
-                "¿Estás seguro de que deseas eliminar al cliente con ID " + id + "?",
-                "Confirmar eliminación", JOptionPane.YES_NO_OPTION
-        );
-
-        if (confirm != JOptionPane.YES_OPTION) {
-            return;
-        }
-
-        try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM clientes WHERE idCliente = ?")) {
-            ps.setInt(1, id);
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(panel, "Cliente eliminado con éxito.");
-            } else {
-                JOptionPane.showMessageDialog(panel, "No se encontró un cliente con el ID proporcionado.",
-                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(panel, "Error al eliminar cliente: " + e.getMessage(),
-                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-        }
-
-        SwingUtilities.invokeLater(() -> {
-            panel.removeAll();
-            Client.showClientTable(panel, e -> {
-            });
-            panel.revalidate();
-            panel.repaint();
-        });
-    }
-
     public void modifyClientAction(JPanel panel, ActionListener listener) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(panel),
                 "Modificar Cliente", true);
@@ -359,5 +283,80 @@ public class Client {
         dialog.add(buttonPanel, BorderLayout.SOUTH);
 
         dialog.setVisible(true);
+    }
+
+    public void modifyClient(JPanel panel, Client newClient, int id) {
+        String query = "UPDATE clientes SET nombreCliente = ?, direccionCliente = ?, cpCliente = ?, " +
+                "poblacionCliente = ?, provinciaCliente = ?, paisCliente = ?, cifCliente = ?, telCliente = ?, " +
+                "emailCliente = ?, ibanCliente = ?, riesgoCliente = ?, descuentoCliente = ? WHERE idCliente = ?";
+
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setString(1, newClient.getPersonData().getName());
+            ps.setString(2, newClient.getAddress().getStreet());
+            ps.setInt(3, newClient.getAddress().getPostCode());
+            ps.setString(4, newClient.getAddress().getTown());
+            ps.setString(5, newClient.getAddress().getProvince());
+            ps.setString(6, newClient.getAddress().getCountry());
+            ps.setString(7, newClient.getPersonData().getCif());
+            ps.setString(8, newClient.getPersonData().getNumber());
+            ps.setString(9, newClient.getPersonData().getEmail());
+            ps.setString(10, newClient.getPersonData().getIban());
+            ps.setDouble(11, newClient.getRisk());
+            ps.setDouble(12, newClient.getDiscount());
+            ps.setInt(13, id);
+
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(panel, "Cliente actualizado con éxito.");
+            } else {
+                JOptionPane.showMessageDialog(panel, "No se pudo actualizar el cliente. Verifica el ID.",
+                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(panel, "Error al modificar cliente: " + e.getMessage(),
+                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            panel.removeAll();
+            Client.showClientTable(panel, e -> {
+            });
+            panel.revalidate();
+            panel.repaint();
+        });
+    }
+
+    public void deleteClient(JPanel panel, int id, ActionListener listener) {
+        int confirm = JOptionPane.showConfirmDialog(panel,
+                "¿Estás seguro de que deseas eliminar al cliente con ID " + id + "?",
+                "Confirmar eliminación", JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM clientes WHERE idCliente = ?")) {
+            ps.setInt(1, id);
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(panel, "Cliente eliminado con éxito.");
+            } else {
+                JOptionPane.showMessageDialog(panel, "No se encontró un cliente con el ID proporcionado.",
+                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(panel, "Error al eliminar cliente: " + e.getMessage(),
+                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            panel.removeAll();
+            Client.showClientTable(panel, listener);
+            panel.revalidate();
+            panel.repaint();
+        });
     }
 }

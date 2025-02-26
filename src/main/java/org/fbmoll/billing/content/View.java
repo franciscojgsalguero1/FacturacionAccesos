@@ -132,7 +132,7 @@ public class View extends JFrame implements ActionListener {
         if (actionCommand.equals(Constants.CLIENT_EDIT)) {
             client.modifyClientAction(mainPanel, this);
         } else if (actionCommand.equals(Constants.CLIENT_DELETE)) {
-            client.deleteClient(mainPanel, client.getId());
+            client.deleteClient(mainPanel, client.getId(), this);
         }
     }
 
@@ -140,7 +140,7 @@ public class View extends JFrame implements ActionListener {
         if (actionCommand.equals(Constants.ARTICLE_EDIT)) {
             item.modifyItemAction(mainPanel, this);
         } else if (actionCommand.equals(Constants.ARTICLE_DELETE)) {
-            item.deleteItem(mainPanel, item.getId());
+            item.deleteItem(mainPanel, item.getId(), this);
         }
     }
 
@@ -148,7 +148,7 @@ public class View extends JFrame implements ActionListener {
         if (actionCommand.equals(Constants.PROVIDER_EDIT)) {
             provider.modifyProviderAction(mainPanel, this);
         } else if (actionCommand.equals(Constants.PROVIDER_DELETE)) {
-            provider.deleteProvider(mainPanel, provider.getId());
+            provider.deleteProvider(mainPanel, provider.getId(), this);
         }
     }
 
@@ -156,7 +156,7 @@ public class View extends JFrame implements ActionListener {
         if (actionCommand.equals(Constants.WORKER_EDIT)) {
             worker.modifyWorkerAction(mainPanel, this);
         } else if (actionCommand.equals(Constants.WORKER_DELETE)) {
-            worker.deleteWorker(mainPanel, worker.getId());
+            worker.deleteWorker(mainPanel, worker.getId(), this);
         }
     }
 
@@ -164,7 +164,7 @@ public class View extends JFrame implements ActionListener {
         if (actionCommand.equals(Constants.FAMILY_EDIT)) {
             itemFamily.modifyItemFamilyAction(mainPanel, this);
         } else if (actionCommand.equals(Constants.FAMILY_DELETE)) {
-            itemFamily.deleteItemFamily(mainPanel, itemFamily.getId());
+            itemFamily.deleteItemFamily(mainPanel, itemFamily.getId(), this);
         }
     }
 
@@ -172,15 +172,14 @@ public class View extends JFrame implements ActionListener {
         if (actionCommand.equals(Constants.IVA_EDIT)) {
             ivaTypes.modifyIVATypesAction(mainPanel, this);
         } else if (actionCommand.equals(Constants.IVA_DELETE)) {
-            ivaTypes.deleteIVATypes(mainPanel, ivaTypes.getId());
+            ivaTypes.deleteIVATypes(mainPanel, ivaTypes.getId(), this);
         }
     }
 
     private void handleInvoiceActions(Invoice invoice, String actionCommand) {
         switch (actionCommand) {
             case Constants.INVOICE_VIEW -> new ViewInvoice(mainPanel, invoice.getId());
-            case Constants.INVOICE_EDIT -> invoice.modifyInvoiceAction(mainPanel, this);
-            case Constants.INVOICE_DELETE -> invoice.deleteInvoice(mainPanel, invoice.getId());
+            case Constants.INVOICE_DELETE -> invoice.deleteInvoice(mainPanel, invoice.getId(), this);
             default -> throw new IllegalStateException("Unexpected value: " + actionCommand);
         }
     }
@@ -188,7 +187,7 @@ public class View extends JFrame implements ActionListener {
     private void handleCorrectiveInvoiceActions(CorrectiveInvoice invoice, String actionCommand) {
         switch (actionCommand) {
             case Constants.INVOICE_VIEW -> new ViewCorrectiveInvoice(mainPanel, invoice.getId());
-            case Constants.INVOICE_DELETE -> invoice.deleteCorrectiveInvoice(mainPanel, invoice.getId());
+            case Constants.INVOICE_DELETE -> invoice.deleteCorrectiveInvoice(mainPanel, invoice.getId(), this);
             default -> throw new IllegalStateException("Unexpected value: " + actionCommand);
         }
     }

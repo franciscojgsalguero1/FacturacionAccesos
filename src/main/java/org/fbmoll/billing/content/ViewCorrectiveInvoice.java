@@ -159,7 +159,6 @@ public class ViewCorrectiveInvoice extends JDialog {
                             }
                         }
                     }
-
                     loadInvoiceLines(conn, invoiceNumber);
                 }
             }

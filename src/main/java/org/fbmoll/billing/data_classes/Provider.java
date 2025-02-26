@@ -174,72 +174,6 @@ public class Provider {
         return table;
     }
 
-    public void modifyProvider(JPanel panel, Provider updatedProvider, int id) {
-        String query = "UPDATE proveedores SET nombreProveedor = ?, direccionProveedor = ?, cpProveedor = ?, " +
-                "poblacionProveedor = ?, provinciaProveedor = ?, paisProveedor = ?, cifProveedor = ?, " +
-                "telProveedor = ?, emailProveedor = ?, webProveedor = ? WHERE idProveedor = ?";
-
-        try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-
-            ps.setString(1, updatedProvider.getProviderData().getName());
-            ps.setString(2, updatedProvider.getAddress().getStreet());
-            ps.setInt(3, updatedProvider.getAddress().getPostCode());
-            ps.setString(4, updatedProvider.getAddress().getTown());
-            ps.setString(5, updatedProvider.getAddress().getProvince());
-            ps.setString(6, updatedProvider.getAddress().getCountry());
-            ps.setString(7, updatedProvider.getProviderData().getCif());
-            ps.setString(8, updatedProvider.getProviderData().getNumber());
-            ps.setString(9, updatedProvider.getProviderData().getEmail());
-            ps.setString(10, updatedProvider.getProviderData().getWebsite());
-            ps.setInt(11, id);
-
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(panel, "Proveedor actualizado con éxito.");
-            } else {
-                JOptionPane.showMessageDialog(panel, "No se pudo actualizar el proveedor.",
-                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(panel, "Error al modificar proveedor: " + e.getMessage(),
-                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-        }
-
-        SwingUtilities.invokeLater(() -> showProviderTable(panel, e -> {}));
-    }
-
-    public void deleteProvider(JPanel panel, int id) {
-        int confirm = JOptionPane.showConfirmDialog(panel,
-                "¿Estás seguro de que deseas eliminar al proveedor con ID " + id + "?",
-                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
-
-        if (confirm != JOptionPane.YES_OPTION) return;
-
-        try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM proveedores WHERE idProveedor = ?")) {
-            ps.setInt(1, id);
-            int rowsAffected = ps.executeUpdate();
-
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(panel, "Proveedor eliminado con éxito.");
-            } else {
-                JOptionPane.showMessageDialog(panel, "No se encontró un proveedor con el ID proporcionado.",
-                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(panel, "Error al eliminar proveedor: " + e.getMessage(),
-                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-        }
-
-        SwingUtilities.invokeLater(() -> {
-            panel.removeAll();
-            Provider.showProviderTable(panel, e -> {});
-            panel.revalidate();
-            panel.repaint();
-        });
-    }
-
     public void modifyProviderAction(JPanel panel, ActionListener listener) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(panel),
                 "Modificar Proveedor", true);
@@ -321,5 +255,71 @@ public class Provider {
         dialog.add(buttonPanel, BorderLayout.SOUTH);
 
         dialog.setVisible(true);
+    }
+
+    public void modifyProvider(JPanel panel, Provider updatedProvider, int id) {
+        String query = "UPDATE proveedores SET nombreProveedor = ?, direccionProveedor = ?, cpProveedor = ?, " +
+                "poblacionProveedor = ?, provinciaProveedor = ?, paisProveedor = ?, cifProveedor = ?, " +
+                "telProveedor = ?, emailProveedor = ?, webProveedor = ? WHERE idProveedor = ?";
+
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setString(1, updatedProvider.getProviderData().getName());
+            ps.setString(2, updatedProvider.getAddress().getStreet());
+            ps.setInt(3, updatedProvider.getAddress().getPostCode());
+            ps.setString(4, updatedProvider.getAddress().getTown());
+            ps.setString(5, updatedProvider.getAddress().getProvince());
+            ps.setString(6, updatedProvider.getAddress().getCountry());
+            ps.setString(7, updatedProvider.getProviderData().getCif());
+            ps.setString(8, updatedProvider.getProviderData().getNumber());
+            ps.setString(9, updatedProvider.getProviderData().getEmail());
+            ps.setString(10, updatedProvider.getProviderData().getWebsite());
+            ps.setInt(11, id);
+
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(panel, "Proveedor actualizado con éxito.");
+            } else {
+                JOptionPane.showMessageDialog(panel, "No se pudo actualizar el proveedor.",
+                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(panel, "Error al modificar proveedor: " + e.getMessage(),
+                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+        }
+
+        SwingUtilities.invokeLater(() -> showProviderTable(panel, e -> {}));
+    }
+
+    public void deleteProvider(JPanel panel, int id, ActionListener listener) {
+        int confirm = JOptionPane.showConfirmDialog(panel,
+                "¿Estás seguro de que deseas eliminar al proveedor con ID " + id + "?",
+                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM proveedores WHERE idProveedor = ?")) {
+            ps.setInt(1, id);
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(panel, "Proveedor eliminado con éxito.");
+            } else {
+                JOptionPane.showMessageDialog(panel, "No se encontró un proveedor con el ID proporcionado.",
+                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(panel, "Error al eliminar proveedor: " + e.getMessage(),
+                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            panel.removeAll();
+            Client.showClientTable(panel, listener);
+            panel.revalidate();
+            panel.repaint();
+        });
     }
 }

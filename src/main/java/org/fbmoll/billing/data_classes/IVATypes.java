@@ -155,57 +155,6 @@ public class IVATypes {
         return ivaTypes;
     }
 
-    public void modifyIVATypes(JPanel panel, IVATypes updatedIVA, int id) {
-        String query = "UPDATE tiposiva SET iva = ?, observacionesTipoIva = ? WHERE idTipoIva = ?";
-
-        try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-
-            ps.setDouble(1, updatedIVA.getAmount());
-            ps.setString(2, updatedIVA.getDescription());
-            ps.setInt(3, id);
-
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(panel, "Tipo de IVA actualizado con éxito.");
-            } else {
-                JOptionPane.showMessageDialog(panel, "No se pudo actualizar el tipo de IVA.",
-                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(panel, "Error al modificar tipo de IVA: " + e.getMessage(),
-                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-        }
-
-        SwingUtilities.invokeLater(() -> showIVATypesTable(panel, e -> {}));
-    }
-
-    public void deleteIVATypes(JPanel panel, int id) {
-        int confirm = JOptionPane.showConfirmDialog(panel,
-                "¿Estás seguro de que deseas eliminar el tipo de IVA con ID " + id + "?",
-                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
-
-        if (confirm != JOptionPane.YES_OPTION) return;
-
-        try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM tiposiva WHERE idTipoIva = ?")) {
-            ps.setInt(1, id);
-            int rowsAffected = ps.executeUpdate();
-
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(panel, "Tipo de IVA eliminado con éxito.");
-            } else {
-                JOptionPane.showMessageDialog(panel, "No se encontró un tipo de IVA con el ID proporcionado.",
-                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(panel, "Error al eliminar tipo de IVA: " + e.getMessage(),
-                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-        }
-
-        SwingUtilities.invokeLater(() -> showIVATypesTable(panel, e -> {}));
-    }
-
     public void modifyIVATypesAction(JPanel panel, ActionListener listener) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(panel),
                 "Modificar Tipo de IVA", true);
@@ -259,5 +208,61 @@ public class IVATypes {
         dialog.add(formPanel, BorderLayout.CENTER);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
+    }
+
+    public void modifyIVATypes(JPanel panel, IVATypes updatedIVA, int id) {
+        String query = "UPDATE tiposiva SET iva = ?, observacionesTipoIva = ? WHERE idTipoIva = ?";
+
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setDouble(1, updatedIVA.getAmount());
+            ps.setString(2, updatedIVA.getDescription());
+            ps.setInt(3, id);
+
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(panel, "Tipo de IVA actualizado con éxito.");
+            } else {
+                JOptionPane.showMessageDialog(panel, "No se pudo actualizar el tipo de IVA.",
+                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(panel, "Error al modificar tipo de IVA: " + e.getMessage(),
+                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+        }
+
+        SwingUtilities.invokeLater(() -> showIVATypesTable(panel, e -> {}));
+    }
+
+    public void deleteIVATypes(JPanel panel, int id, ActionListener listener) {
+        int confirm = JOptionPane.showConfirmDialog(panel,
+                "¿Estás seguro de que deseas eliminar el tipo de IVA con ID " + id + "?",
+                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM tiposiva WHERE idTipoIva = ?")) {
+            ps.setInt(1, id);
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(panel, "Tipo de IVA eliminado con éxito.");
+            } else {
+                JOptionPane.showMessageDialog(panel, "No se encontró un tipo de IVA con el ID proporcionado.",
+                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(panel, "Error al eliminar tipo de IVA: " + e.getMessage(),
+                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            panel.removeAll();
+            Client.showClientTable(panel, listener);
+            panel.revalidate();
+            panel.repaint();
+        });
     }
 }

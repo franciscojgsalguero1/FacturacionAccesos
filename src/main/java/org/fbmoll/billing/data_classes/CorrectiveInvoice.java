@@ -36,19 +36,19 @@ public class CorrectiveInvoice {
     final JPanel panel;
     final int id;
     final Date date;
-    final int clientId;
-    final Integer workerId;
+    final String client;
+    final String worker;
     final InvoicePaymentDTO invoicePaymentDTO;
     final Button view;
     final Button delete;
 
-    public CorrectiveInvoice(JPanel panel, ActionListener listener, int id, Date date, int clientId, Integer workerId,
-                             InvoicePaymentDTO invoicePaymentDTO) {
+    public CorrectiveInvoice(JPanel panel, ActionListener listener, int id, Date date,
+                             String client, String worker, InvoicePaymentDTO invoicePaymentDTO) {
         this.panel = panel;
         this.id = id;
         this.date = date;
-        this.clientId = clientId;
-        this.workerId = workerId;
+        this.client = client;
+        this.worker = worker;
         this.invoicePaymentDTO = invoicePaymentDTO;
 
         this.view = new Button("Ver");
@@ -65,7 +65,7 @@ public class CorrectiveInvoice {
 
     public static void showCorrectiveInvoiceTable(JPanel panel, ActionListener listener) {
         List<CorrectiveInvoice> invoices = getCorrectiveInvoices(panel, listener);
-        JPanel topPanel = createTopPanel(panel);
+        JPanel topPanel = createTopPanel(panel, listener);
         JTable table = setupCorrectiveInvoiceTable(invoices, listener);
         JScrollPane tablePane = new JScrollPane(Utils.resizeTableColumns(table));
 
@@ -73,22 +73,15 @@ public class CorrectiveInvoice {
         TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
         table.setRowSorter(sorter);
 
-        // Set up search filtering
         JTextField searchField = (JTextField) ((JPanel) topPanel.getComponent(3)).getComponent(0);
         JComboBox<String> filterDropdown = (JComboBox<String>) topPanel.getComponent(2);
         searchField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
-            public void insertUpdate(DocumentEvent e) {
-                applyFilter();
-            }
+            public void insertUpdate(DocumentEvent e) { applyFilter(); }
             @Override
-            public void removeUpdate(DocumentEvent e) {
-                applyFilter();
-            }
+            public void removeUpdate(DocumentEvent e) { applyFilter(); }
             @Override
-            public void changedUpdate(DocumentEvent e) {
-                applyFilter();
-            }
+            public void changedUpdate(DocumentEvent e) { applyFilter(); }
             private void applyFilter() {
                 String text = searchField.getText().trim();
                 int columnIndex = filterDropdown.getSelectedIndex();
@@ -106,13 +99,17 @@ public class CorrectiveInvoice {
         });
     }
 
-    private static JPanel createTopPanel(JPanel panel) {
+    private static JPanel createTopPanel(JPanel panel, ActionListener listener) {
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
         JButton createButton = new JButton("Crear Rectificativa");
-        createButton.addActionListener(e -> new CreateCorrectiveInvoice(panel));
 
-        String[] filterOptions = {"ID", "Fecha", "ID Cliente", "ID Trabajador", "Base Imponible", "IVA", "Total"};
+        createButton.addActionListener(e -> new CreateCorrectiveInvoice(panel, evt -> {
+            if ("REFRESH".equals(evt.getActionCommand())) {
+                SwingUtilities.invokeLater(() -> showCorrectiveInvoiceTable(panel, listener));
+            }
+        }));
+
+        String[] filterOptions = {"ID", "Factura", "Fecha", "Cliente", "Trabajador", "Base Imponible", "IVA", "Total"};
         JComboBox<String> filterDropdown = new JComboBox<>(filterOptions);
         JTextField searchField = new JTextField(20);
         searchField.setToolTipText("Buscar rectificativa...");
@@ -120,7 +117,6 @@ public class CorrectiveInvoice {
         topPanel.add(createButton);
         topPanel.add(new JLabel("Filtrar por:"));
         topPanel.add(filterDropdown);
-        // Wrapping searchField in a JPanel to easily retrieve later
         JPanel searchPanel = new JPanel();
         searchPanel.add(searchField);
         topPanel.add(searchPanel);
@@ -130,9 +126,13 @@ public class CorrectiveInvoice {
 
     public static List<CorrectiveInvoice> getCorrectiveInvoices(JPanel panel, ActionListener listener) {
         List<CorrectiveInvoice> invoices = new ArrayList<>();
-        String query = "SELECT idRectificativaCliente, fechaRectificativaCliente, idClienteRectificativaCliente, "
-                + "idTrabajadorRectificativaCliente, numeroRectificativaCliente, baseImponibleRectificativaCliente, "
-                + "ivaRectificativaCliente, totalRectificativaCliente FROM rectificativasclientes";
+        String query = "SELECT fc.idFacturaCliente, fc.numeroFacturaCliente, fc.fechaFacturaCliente, "
+                + "c.nombreCliente, w.name, fc.baseImponibleFacturaCliente, "
+                + "fc.ivaFacturaCliente, fc.totalFacturaCliente "
+                + "FROM facturasclientes fc "
+                + "JOIN clientes c ON fc.idClienteFactura = c.idCliente "
+                + "JOIN workers w ON fc.idTrabajadorFactura = w.id "
+                + "WHERE fc.corrected = 1";
 
         try (Connection conn = Utils.getConnection();
              PreparedStatement ps = conn.prepareStatement(query);
@@ -142,37 +142,38 @@ public class CorrectiveInvoice {
                 invoices.add(new CorrectiveInvoice(
                         panel,
                         listener,
-                        rs.getInt("idRectificativaCliente"),
-                        rs.getDate("fechaRectificativaCliente"),
-                        rs.getInt("idClienteRectificativaCliente"),
-                        rs.getObject("idTrabajadorRectificativaCliente", Integer.class),
+                        rs.getInt("idFacturaCliente"),
+                        rs.getDate("fechaFacturaCliente"),
+                        rs.getString("nombreCliente"),
+                        rs.getString("name"),
                         new InvoicePaymentDTO(
-                                rs.getInt("numeroRectificativaCliente"),
-                                rs.getDouble("baseImponibleRectificativaCliente"),
-                                rs.getDouble("ivaRectificativaCliente"),
-                                rs.getDouble("totalRectificativaCliente"),
-                                false, false, "", null
+                                rs.getInt("numeroFacturaCliente"),
+                                rs.getDouble("baseImponibleFacturaCliente"),
+                                rs.getDouble("ivaFacturaCliente"),
+                                rs.getDouble("totalFacturaCliente"),
+                                true, false, "", null
                         )
                 ));
             }
         } catch (SQLException e) {
-            logger.error(String.format("Error al obtener rectificativas: %s", e.getMessage()));
+            logger.error(String.format("Error al obtener facturas rectificadas: %s", e.getMessage()));
         }
         return invoices;
     }
 
     private static JTable setupCorrectiveInvoiceTable(List<CorrectiveInvoice> invoices, ActionListener listener) {
-        String[] columnNames = {"ID", "Fecha", "ID Cliente", "ID Trabajador",
-                "Base Imponible", "IVA", "Total", "Ver", "Eliminar"};
+        String[] columnNames = {"ID", "Factura", "Fecha", "Cliente", "Trabajador", "Base Imponible", "IVA",
+                "Total", "Ver", "Eliminar"};
         Object[][] data = new Object[invoices.size()][columnNames.length];
 
         for (int i = 0; i < invoices.size(); i++) {
             CorrectiveInvoice invoice = invoices.get(i);
             data[i] = new Object[]{
                     invoice.getId(),
+                    invoice.getInvoicePaymentDTO().getNumber(),
                     invoice.getDate(),
-                    invoice.getClientId(),
-                    invoice.getWorkerId(),
+                    invoice.getClient(),
+                    invoice.getWorker(),
                     invoice.getInvoicePaymentDTO().getTaxableAmount(),
                     invoice.getInvoicePaymentDTO().getVatAmount(),
                     invoice.getInvoicePaymentDTO().getTotalAmount(),
@@ -201,7 +202,7 @@ public class CorrectiveInvoice {
         return table;
     }
 
-    public void deleteCorrectiveInvoice(JPanel panel, int id) {
+    public void deleteCorrectiveInvoice(JPanel panel, int id, ActionListener listener) {
         int confirm = JOptionPane.showConfirmDialog(panel, "¿Estás seguro de eliminar la rectificativa?",
                 "Confirmar", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) {
@@ -220,7 +221,7 @@ public class CorrectiveInvoice {
 
         SwingUtilities.invokeLater(() -> {
             panel.removeAll();
-            showCorrectiveInvoiceTable(panel, e -> {});
+            Client.showClientTable(panel, listener);
             panel.revalidate();
             panel.repaint();
         });

@@ -152,7 +152,7 @@ public class Item {
             JButton deleteButton = new JButton(Constants.BUTTON_DELETE);
 
             editButton.addActionListener(e -> item.modifyItemAction(panel, listener));
-            deleteButton.addActionListener(e -> item.deleteItem(panel, item.getId()));
+            deleteButton.addActionListener(e -> item.deleteItem(panel, item.getId(), listener));
 
             data[i] = new Object[]{
                     item.id, item.getItemData().getCode(), item.getItemData().getBarCode(), item.description,
@@ -183,76 +183,6 @@ public class Item {
                 Constants.ARTICLE_DELETE));
 
         return table;
-    }
-
-    public void deleteItem(JPanel panel, int id) {
-        int confirm = JOptionPane.showConfirmDialog(panel,
-                "¿Estás seguro de que deseas eliminar el artículo con ID " + id + "?",
-                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
-
-        if (confirm != JOptionPane.YES_OPTION) return;
-
-        try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM articulos WHERE idArticulo = ?")) {
-            ps.setInt(1, id);
-            int rowsAffected = ps.executeUpdate();
-
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(panel, "Artículo eliminado con éxito.");
-            } else {
-                JOptionPane.showMessageDialog(panel, "No se encontró un artículo con el ID proporcionado.",
-                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(panel, "Error al eliminar artículo: " + e.getMessage(),
-                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-        }
-
-        SwingUtilities.invokeLater(() -> {
-            panel.removeAll();
-            Item.showItemTable(panel, e -> {});
-            panel.revalidate();
-            panel.repaint();
-        });
-    }
-
-    public void modifyItem(JPanel panel, Item updatedItem, int id) {
-        String query = "UPDATE articulos SET codigoArticulo = ?, codigoBarrasArticulo = ?, descripcionArticulo = ?, " +
-                "familiaArticulo = ?, costeArticulo = ?, margenComercialArticulo = ?, pvpArticulo = ?, " +
-                "proveedorArticulo = ?, stockArticulo = ? WHERE idArticulo = ?";
-
-        try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-
-            ps.setString(1, updatedItem.getItemData().getCode());
-            ps.setString(2, updatedItem.getItemData().getBarCode());
-            ps.setString(3, updatedItem.getDescription());
-            ps.setString(4, updatedItem.getFamilyId());
-            ps.setDouble(5, updatedItem.getItemData().getCost());
-            ps.setDouble(6, updatedItem.getItemData().getMargin());
-            ps.setDouble(7, updatedItem.getItemData().getPrice());
-            ps.setString(8, updatedItem.getItemData().getSupplier());
-            ps.setInt(9, updatedItem.getItemData().getStock());
-            ps.setInt(10, id);
-
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(panel, "Artículo actualizado con éxito.");
-            } else {
-                JOptionPane.showMessageDialog(panel, "No se pudo actualizar el artículo. Verifica el ID.",
-                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(panel, "Error al modificar artículo: " + e.getMessage(),
-                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-        }
-
-        SwingUtilities.invokeLater(() -> {
-            panel.removeAll();
-            Item.showItemTable(panel, e -> {});
-            panel.revalidate();
-            panel.repaint();
-        });
     }
 
     public void modifyItemAction(JPanel panel, ActionListener listener) {
@@ -336,5 +266,75 @@ public class Item {
         dialog.add(buttonPanel, BorderLayout.SOUTH);
 
         dialog.setVisible(true);
+    }
+
+    public void modifyItem(JPanel panel, Item updatedItem, int id) {
+        String query = "UPDATE articulos SET codigoArticulo = ?, codigoBarrasArticulo = ?, descripcionArticulo = ?, " +
+                "familiaArticulo = ?, costeArticulo = ?, margenComercialArticulo = ?, pvpArticulo = ?, " +
+                "proveedorArticulo = ?, stockArticulo = ? WHERE idArticulo = ?";
+
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setString(1, updatedItem.getItemData().getCode());
+            ps.setString(2, updatedItem.getItemData().getBarCode());
+            ps.setString(3, updatedItem.getDescription());
+            ps.setString(4, updatedItem.getFamilyId());
+            ps.setDouble(5, updatedItem.getItemData().getCost());
+            ps.setDouble(6, updatedItem.getItemData().getMargin());
+            ps.setDouble(7, updatedItem.getItemData().getPrice());
+            ps.setString(8, updatedItem.getItemData().getSupplier());
+            ps.setInt(9, updatedItem.getItemData().getStock());
+            ps.setInt(10, id);
+
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(panel, "Artículo actualizado con éxito.");
+            } else {
+                JOptionPane.showMessageDialog(panel, "No se pudo actualizar el artículo. Verifica el ID.",
+                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(panel, "Error al modificar artículo: " + e.getMessage(),
+                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            panel.removeAll();
+            Item.showItemTable(panel, e -> {});
+            panel.revalidate();
+            panel.repaint();
+        });
+    }
+
+    public void deleteItem(JPanel panel, int id, ActionListener listener) {
+        int confirm = JOptionPane.showConfirmDialog(panel,
+                "¿Estás seguro de que deseas eliminar el artículo con ID " + id + "?",
+                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM articulos WHERE idArticulo = ?")) {
+            ps.setInt(1, id);
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(panel, "Artículo eliminado con éxito.");
+            } else {
+                JOptionPane.showMessageDialog(panel, "No se encontró un artículo con el ID proporcionado.",
+                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(panel, "Error al eliminar artículo: " + e.getMessage(),
+                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            panel.removeAll();
+            Client.showClientTable(panel, listener);
+            panel.revalidate();
+            panel.repaint();
+        });
     }
 }

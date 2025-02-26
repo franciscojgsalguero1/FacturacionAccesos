@@ -155,59 +155,6 @@ public class ItemFamily {
         return families;
     }
 
-    public void modifyItemFamily(JPanel panel, ItemFamily updatedFamily, int id) {
-        String query = "UPDATE familiaarticulos SET codigoFamiliaArticulos = ?, " +
-                "denominacionFamilias = ? WHERE idFamiliaArticulos = ?";
-
-        try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
-
-            ps.setString(1, updatedFamily.getCode());
-            ps.setString(2, updatedFamily.getDescription());
-            ps.setInt(3, id);
-
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(panel, "Familia de artículos actualizada con éxito.");
-            } else {
-                JOptionPane.showMessageDialog(panel, "No se pudo actualizar la familia de artículos.",
-                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(panel, "Error al modificar familia de artículos: " + e.getMessage(),
-                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-        }
-
-        SwingUtilities.invokeLater(() -> showItemFamilyTable(panel, e -> {}));
-    }
-
-    public void deleteItemFamily(JPanel panel, int id) {
-        int confirm = JOptionPane.showConfirmDialog(panel,
-                "¿Estás seguro de que deseas eliminar la familia con ID " + id + "?",
-                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
-
-        if (confirm != JOptionPane.YES_OPTION) return;
-
-        try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM familiaarticulos" +
-                     " WHERE idFamiliaArticulos = ?")) {
-            ps.setInt(1, id);
-            int rowsAffected = ps.executeUpdate();
-
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(panel, "Familia de artículos eliminada con éxito.");
-            } else {
-                JOptionPane.showMessageDialog(panel, "No se encontró una familia con el ID proporcionado.",
-                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(panel, "Error al eliminar familia de artículos: " + e.getMessage(),
-                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-        }
-
-        SwingUtilities.invokeLater(() -> showItemFamilyTable(panel, e -> {}));
-    }
-
     public void modifyItemFamilyAction(JPanel panel, ActionListener listener) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(panel),
                 "Modificar Familia de Artículos", true);
@@ -261,5 +208,63 @@ public class ItemFamily {
         dialog.add(formPanel, BorderLayout.CENTER);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
+    }
+
+    public void modifyItemFamily(JPanel panel, ItemFamily updatedFamily, int id) {
+        String query = "UPDATE familiaarticulos SET codigoFamiliaArticulos = ?, " +
+                "denominacionFamilias = ? WHERE idFamiliaArticulos = ?";
+
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setString(1, updatedFamily.getCode());
+            ps.setString(2, updatedFamily.getDescription());
+            ps.setInt(3, id);
+
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(panel, "Familia de artículos actualizada con éxito.");
+            } else {
+                JOptionPane.showMessageDialog(panel, "No se pudo actualizar la familia de artículos.",
+                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(panel, "Error al modificar familia de artículos: " + e.getMessage(),
+                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+        }
+
+        SwingUtilities.invokeLater(() -> showItemFamilyTable(panel, e -> {}));
+    }
+
+    public void deleteItemFamily(JPanel panel, int id, ActionListener listener) {
+        int confirm = JOptionPane.showConfirmDialog(panel,
+                "¿Estás seguro de que deseas eliminar la familia con ID " + id + "?",
+                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM familiaarticulos" +
+                     " WHERE idFamiliaArticulos = ?")) {
+            ps.setInt(1, id);
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(panel, "Familia de artículos eliminada con éxito.");
+            } else {
+                JOptionPane.showMessageDialog(panel, "No se encontró una familia con el ID proporcionado.",
+                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(panel, "Error al eliminar familia de artículos: " + e.getMessage(),
+                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            panel.removeAll();
+            Client.showClientTable(panel, listener);
+            panel.revalidate();
+            panel.repaint();
+        });
     }
 }

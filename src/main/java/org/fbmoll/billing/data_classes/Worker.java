@@ -63,71 +63,128 @@ public class Worker {
         });
     }
 
-    public void modifyWorker(JPanel panel, Worker updatedWorker, int id) {
-        String query = "UPDATE workers SET name = ?, address = ?, postCode = ?, town = ?, province = ?, country = ?, " +
-                "dni = ?, phone = ?, email = ?, position = ?, salary = ?, commissionPercentage = ? WHERE id = ?";
+    public static void showWorkerTable(JPanel panel, ActionListener listener) {
+        List<Worker> workers = Worker.getAllWorkers(panel, listener);
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton createButton = new JButton("Crear Trabajador");
 
-        try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query)) {
+        String[] filterOptions = {
+                "Nombre", "Dirección", "Código Postal", "Ciudad", "Provincia", "País",
+                "DNI", "Teléfono", "Email", "Puesto"
+        };
 
-            ps.setString(1, updatedWorker.getWorkerDTO().getName());
-            ps.setString(2, updatedWorker.getAddress().getStreet());
-            ps.setInt(3, updatedWorker.getAddress().getPostCode());
-            ps.setString(4, updatedWorker.getAddress().getTown());
-            ps.setString(5, updatedWorker.getAddress().getProvince());
-            ps.setString(6, updatedWorker.getAddress().getCountry());
-            ps.setString(7, updatedWorker.getWorkerDTO().getCif());
-            ps.setString(8, updatedWorker.getWorkerDTO().getNumber());
-            ps.setString(9, updatedWorker.getWorkerDTO().getEmail());
-            ps.setString(10, updatedWorker.getWorkerDTO().getPosition());
-            ps.setDouble(11, updatedWorker.getSalary());
-            ps.setDouble(12, updatedWorker.getCommissionPercentage());
-            ps.setInt(13, id);
+        JComboBox<String> filterDropdown = new JComboBox<>(filterOptions);
+        JTextField searchField = new JTextField(20);
+        searchField.setToolTipText("Buscar trabajador...");
 
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(panel, "Trabajador actualizado con éxito.");
-            } else {
-                JOptionPane.showMessageDialog(panel, "No se pudo actualizar el trabajador.",
-                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+        topPanel.add(createButton);
+        topPanel.add(new JLabel("Filtrar por:"));
+        topPanel.add(filterDropdown);
+        topPanel.add(searchField);
+
+        createButton.addActionListener(e -> new CreateWorkerForm(panel));
+        JTable table = setupWorkerTable(workers, listener);
+        JScrollPane tablePane = new JScrollPane(Utils.resizeTableColumns(table));
+
+        DefaultTableModel model = (DefaultTableModel) table.getModel();
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+        table.setRowSorter(sorter);
+
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { applyFilter(); }
+            public void removeUpdate(DocumentEvent e) { applyFilter(); }
+            public void changedUpdate(DocumentEvent e) { applyFilter(); }
+
+            private void applyFilter() {
+                String text = searchField.getText().trim();
+                int columnIndex = filterDropdown.getSelectedIndex() + 1;
+                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + text, columnIndex));
             }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(panel, "Error al modificar trabajador: " + e.getMessage(),
-                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-        }
-
-        SwingUtilities.invokeLater(() -> showWorkerTable(panel, e -> {}));
-    }
-
-    public void deleteWorker(JPanel panel, int id) {
-        int confirm = JOptionPane.showConfirmDialog(panel,
-                "¿Estás seguro de que deseas eliminar al trabajador con ID " + id + "?",
-                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
-
-        if (confirm != JOptionPane.YES_OPTION) return;
-
-        try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement("DELETE FROM workers WHERE id = ?")) {
-            ps.setInt(1, id);
-            int rowsAffected = ps.executeUpdate();
-
-            if (rowsAffected > 0) {
-                JOptionPane.showMessageDialog(panel, "Trabajador eliminado con éxito.");
-            } else {
-                JOptionPane.showMessageDialog(panel, "No se encontró un trabajador con el ID proporcionado.",
-                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(panel, "Error al eliminar trabajador: " + e.getMessage(),
-                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-        }
+        });
 
         SwingUtilities.invokeLater(() -> {
             panel.removeAll();
-            Worker.showWorkerTable(panel, e -> {});
+            panel.setLayout(new BorderLayout());
+            panel.add(topPanel, BorderLayout.NORTH);
+            panel.add(tablePane, BorderLayout.CENTER);
             panel.revalidate();
             panel.repaint();
         });
+    }
+
+    public static List<Worker> getAllWorkers(JPanel panel, ActionListener listener) {
+        List<Worker> workers = new ArrayList<>();
+        String query = "SELECT id, name, address, postCode, town, province, country, dni, phone, email, position, " +
+                "salary, commissionPercentage FROM workers";
+
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                workers.add(new Worker(
+                        panel, listener, rs.getInt("id"),
+                        new AddressDTO(
+                                rs.getString("address"), rs.getInt("postCode"),
+                                rs.getString("town"), rs.getString("province"),
+                                rs.getString("country")
+                        ),
+                        new WorkerDTO(
+                                rs.getString("name"), rs.getString("dni"),
+                                rs.getString("phone"), rs.getString("email"),
+                                rs.getString("position")
+                        ),
+                        rs.getDouble("salary"),
+                        rs.getDouble("commissionPercentage")
+                ));
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(panel, "Error al obtener trabajadores: " + e.getMessage(),
+                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+        }
+        return workers;
+    }
+
+    private static JTable setupWorkerTable(List<Worker> workers, ActionListener listener) {
+        String[] columnNames = {
+                "ID", "Nombre", "Dirección", "Código Postal", "Ciudad", "Provincia", "País",
+                "DNI", "Teléfono", "Email", "Puesto", "Salario", "Comisión %",
+                Constants.BUTTON_EDIT, Constants.BUTTON_DELETE
+        };
+
+        Object[][] data = new Object[workers.size()][columnNames.length];
+        for (int i = 0; i < workers.size(); i++) {
+            Worker w = workers.get(i);
+            JButton editButton = new JButton(Constants.BUTTON_EDIT);
+            JButton deleteButton = new JButton(Constants.BUTTON_DELETE);
+
+            data[i] = new Object[]{
+                    w.id, w.getWorkerDTO().getName(), w.getAddress().getStreet(), w.getAddress().getPostCode(),
+                    w.getAddress().getTown(), w.getAddress().getProvince(), w.getAddress().getCountry(),
+                    w.getWorkerDTO().getCif(), w.getWorkerDTO().getNumber(), w.getWorkerDTO().getEmail(),
+                    w.getWorkerDTO().getPosition(), w.salary, w.commissionPercentage, editButton, deleteButton
+            };
+        }
+
+        DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column == 13 || column == 14;
+            }
+        };
+
+        JTable table = new JTable(tableModel);
+        table.setCellSelectionEnabled(true);
+
+        table.getColumn(Constants.BUTTON_EDIT).setCellRenderer(new ButtonRenderer());
+        table.getColumn(Constants.BUTTON_DELETE).setCellRenderer(new ButtonRenderer());
+
+        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(listener, workers,
+                Constants.WORKER_EDIT));
+        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(listener, workers,
+                Constants.WORKER_DELETE));
+
+        return table;
     }
 
     public void modifyWorkerAction(JPanel panel, ActionListener listener) {
@@ -217,128 +274,70 @@ public class Worker {
         dialog.setVisible(true);
     }
 
-    public static void showWorkerTable(JPanel panel, ActionListener listener) {
-        List<Worker> workers = Worker.getAllWorkers(panel, listener);
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton createButton = new JButton("Crear Trabajador");
+    public void modifyWorker(JPanel panel, Worker updatedWorker, int id) {
+        String query = "UPDATE workers SET name = ?, address = ?, postCode = ?, town = ?, province = ?, country = ?, " +
+                "dni = ?, phone = ?, email = ?, position = ?, salary = ?, commissionPercentage = ? WHERE id = ?";
 
-        String[] filterOptions = {
-                "Nombre", "Dirección", "Código Postal", "Ciudad", "Provincia", "País",
-                "DNI", "Teléfono", "Email", "Puesto"
-        };
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
 
-        JComboBox<String> filterDropdown = new JComboBox<>(filterOptions);
-        JTextField searchField = new JTextField(20);
-        searchField.setToolTipText("Buscar trabajador...");
+            ps.setString(1, updatedWorker.getWorkerDTO().getName());
+            ps.setString(2, updatedWorker.getAddress().getStreet());
+            ps.setInt(3, updatedWorker.getAddress().getPostCode());
+            ps.setString(4, updatedWorker.getAddress().getTown());
+            ps.setString(5, updatedWorker.getAddress().getProvince());
+            ps.setString(6, updatedWorker.getAddress().getCountry());
+            ps.setString(7, updatedWorker.getWorkerDTO().getCif());
+            ps.setString(8, updatedWorker.getWorkerDTO().getNumber());
+            ps.setString(9, updatedWorker.getWorkerDTO().getEmail());
+            ps.setString(10, updatedWorker.getWorkerDTO().getPosition());
+            ps.setDouble(11, updatedWorker.getSalary());
+            ps.setDouble(12, updatedWorker.getCommissionPercentage());
+            ps.setInt(13, id);
 
-        topPanel.add(createButton);
-        topPanel.add(new JLabel("Filtrar por:"));
-        topPanel.add(filterDropdown);
-        topPanel.add(searchField);
-
-        createButton.addActionListener(e -> new CreateWorkerForm(panel));
-        JTable table = setupWorkerTable(workers, listener);
-        JScrollPane tablePane = new JScrollPane(Utils.resizeTableColumns(table));
-
-        DefaultTableModel model = (DefaultTableModel) table.getModel();
-        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
-        table.setRowSorter(sorter);
-
-        searchField.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { applyFilter(); }
-            public void removeUpdate(DocumentEvent e) { applyFilter(); }
-            public void changedUpdate(DocumentEvent e) { applyFilter(); }
-
-            private void applyFilter() {
-                String text = searchField.getText().trim();
-                int columnIndex = filterDropdown.getSelectedIndex() + 1;
-                sorter.setRowFilter(RowFilter.regexFilter("(?i)" + text, columnIndex));
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(panel, "Trabajador actualizado con éxito.");
+            } else {
+                JOptionPane.showMessageDialog(panel, "No se pudo actualizar el trabajador.",
+                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
             }
-        });
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(panel, "Error al modificar trabajador: " + e.getMessage(),
+                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+        }
+
+        SwingUtilities.invokeLater(() -> showWorkerTable(panel, e -> {}));
+    }
+
+    public void deleteWorker(JPanel panel, int id, ActionListener listener) {
+        int confirm = JOptionPane.showConfirmDialog(panel,
+                "¿Estás seguro de que deseas eliminar al trabajador con ID " + id + "?",
+                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement("DELETE FROM workers WHERE id = ?")) {
+            ps.setInt(1, id);
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(panel, "Trabajador eliminado con éxito.");
+            } else {
+                JOptionPane.showMessageDialog(panel, "No se encontró un trabajador con el ID proporcionado.",
+                        Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(panel, "Error al eliminar trabajador: " + e.getMessage(),
+                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
+        }
 
         SwingUtilities.invokeLater(() -> {
             panel.removeAll();
-            panel.setLayout(new BorderLayout());
-            panel.add(topPanel, BorderLayout.NORTH);
-            panel.add(tablePane, BorderLayout.CENTER);
+            Client.showClientTable(panel, listener);
             panel.revalidate();
             panel.repaint();
         });
-    }
-
-    private static JTable setupWorkerTable(List<Worker> workers, ActionListener listener) {
-        String[] columnNames = {
-                "ID", "Nombre", "Dirección", "Código Postal", "Ciudad", "Provincia", "País",
-                "DNI", "Teléfono", "Email", "Puesto", "Salario", "Comisión %",
-                Constants.BUTTON_EDIT, Constants.BUTTON_DELETE
-        };
-
-        Object[][] data = new Object[workers.size()][columnNames.length];
-        for (int i = 0; i < workers.size(); i++) {
-            Worker w = workers.get(i);
-            JButton editButton = new JButton(Constants.BUTTON_EDIT);
-            JButton deleteButton = new JButton(Constants.BUTTON_DELETE);
-
-            data[i] = new Object[]{
-                    w.id, w.getWorkerDTO().getName(), w.getAddress().getStreet(), w.getAddress().getPostCode(),
-                    w.getAddress().getTown(), w.getAddress().getProvince(), w.getAddress().getCountry(),
-                    w.getWorkerDTO().getCif(), w.getWorkerDTO().getNumber(), w.getWorkerDTO().getEmail(),
-                    w.getWorkerDTO().getPosition(), w.salary, w.commissionPercentage, editButton, deleteButton
-            };
-        }
-
-        DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return column == 13 || column == 14;
-            }
-        };
-
-        JTable table = new JTable(tableModel);
-        table.setCellSelectionEnabled(true);
-
-        table.getColumn(Constants.BUTTON_EDIT).setCellRenderer(new ButtonRenderer());
-        table.getColumn(Constants.BUTTON_DELETE).setCellRenderer(new ButtonRenderer());
-
-        table.getColumn(Constants.BUTTON_EDIT).setCellEditor(new ButtonEditor<>(listener, workers,
-                Constants.WORKER_EDIT));
-        table.getColumn(Constants.BUTTON_DELETE).setCellEditor(new ButtonEditor<>(listener, workers,
-                Constants.WORKER_DELETE));
-
-        return table;
-    }
-
-
-    public static List<Worker> getAllWorkers(JPanel panel, ActionListener listener) {
-        List<Worker> workers = new ArrayList<>();
-        String query = "SELECT id, name, address, postCode, town, province, country, dni, phone, email, position, " +
-                "salary, commissionPercentage FROM workers";
-
-        try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(query);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                workers.add(new Worker(
-                        panel, listener, rs.getInt("id"),
-                        new AddressDTO(
-                                rs.getString("address"), rs.getInt("postCode"),
-                                rs.getString("town"), rs.getString("province"),
-                                rs.getString("country")
-                        ),
-                        new WorkerDTO(
-                                rs.getString("name"), rs.getString("dni"),
-                                rs.getString("phone"), rs.getString("email"),
-                                rs.getString("position")
-                        ),
-                        rs.getDouble("salary"),
-                        rs.getDouble("commissionPercentage")
-                ));
-            }
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(panel, "Error al obtener trabajadores: " + e.getMessage(),
-                    Constants.ERROR, JOptionPane.ERROR_MESSAGE);
-        }
-        return workers;
     }
 }

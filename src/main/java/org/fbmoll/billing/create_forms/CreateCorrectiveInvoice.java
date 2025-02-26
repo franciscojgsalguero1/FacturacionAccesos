@@ -6,6 +6,8 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,13 +18,15 @@ import java.util.List;
 public class CreateCorrectiveInvoice extends JDialog {
     private final JTable invoiceTable;
     private final List<Integer> invoiceIds = new ArrayList<>();
+    private final ActionListener refreshListener;
 
-    public CreateCorrectiveInvoice(JPanel parentPanel) {
+    public CreateCorrectiveInvoice(JPanel parentPanel, ActionListener refreshListener) {
         setTitle("Crear Factura Rectificativa");
         setSize(800, 500);
         setLayout(new BorderLayout());
         setModal(true);
         setLocationRelativeTo(parentPanel);
+        this.refreshListener = refreshListener;
 
         invoiceTable = new JTable();
         setupInvoiceTable();
@@ -33,6 +37,7 @@ public class CreateCorrectiveInvoice extends JDialog {
 
         setVisible(true);
     }
+
 
     private void setupInvoiceTable() {
         DefaultTableModel model = new DefaultTableModel(
@@ -103,7 +108,6 @@ public class CreateCorrectiveInvoice extends JDialog {
             super(new JCheckBox());
             this.invoiceIds = invoiceIds;
             this.button = new JButton(Constants.RECTIFY);
-            // Using lambda for simplicity
             this.button.addActionListener(e -> rectifyInvoice(selectedInvoiceId));
         }
 
@@ -129,7 +133,14 @@ public class CreateCorrectiveInvoice extends JDialog {
 
                 JOptionPane.showMessageDialog(CreateCorrectiveInvoice.this,
                         "Factura rectificativa creada con éxito.");
+
+                if (refreshListener != null) {
+                    SwingUtilities.invokeLater(() -> refreshListener.actionPerformed(
+                            new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "REFRESH")));
+                }
+
                 dispose();
+
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(CreateCorrectiveInvoice.this,
                         "Error al crear la factura rectificativa: " + ex.getMessage(),
