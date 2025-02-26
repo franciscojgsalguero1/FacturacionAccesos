@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
@@ -36,6 +37,7 @@ public class Provider {
     final ProviderDTO providerData;
     final Button edit;
     final Button delete;
+    final JComboBox<String> countryCombo = new JComboBox<>();
 
     public Provider(JPanel panel, ActionListener listener, int id, AddressDTO address, ProviderDTO providerData) {
         this.panel = panel;
@@ -177,11 +179,17 @@ public class Provider {
     public void modifyProviderAction(JPanel panel, ActionListener listener) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(panel),
                 "Modificar Proveedor", true);
-        dialog.setSize(400, 500);
+        dialog.setSize(800, 300);
         dialog.setLocationRelativeTo(panel);
         dialog.setLayout(new BorderLayout());
+        dialog.setModal(true);
 
-        JPanel formPanel = new JPanel(new GridLayout(0, 2));
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
 
         JTextField nameField = new JTextField(this.getProviderData().getName());
         JTextField addressField = new JTextField(this.getAddress().getStreet());
@@ -194,26 +202,21 @@ public class Provider {
         JTextField emailField = new JTextField(this.getProviderData().getEmail());
         JTextField websiteField = new JTextField(this.getProviderData().getWebsite());
 
-        formPanel.add(new JLabel("Nombre:"));
-        formPanel.add(nameField);
-        formPanel.add(new JLabel("Dirección:"));
-        formPanel.add(addressField);
-        formPanel.add(new JLabel("Código Postal:"));
-        formPanel.add(postCodeField);
-        formPanel.add(new JLabel("Ciudad:"));
-        formPanel.add(townField);
-        formPanel.add(new JLabel("Provincia:"));
-        formPanel.add(provinceField);
-        formPanel.add(new JLabel("País:"));
-        formPanel.add(countryField);
-        formPanel.add(new JLabel("CIF:"));
-        formPanel.add(cifField);
-        formPanel.add(new JLabel("Teléfono:"));
-        formPanel.add(phoneField);
-        formPanel.add(new JLabel("Email:"));
-        formPanel.add(emailField);
-        formPanel.add(new JLabel("Web:"));
-        formPanel.add(websiteField);
+        loadCountries();
+
+        Object[][] rows = {
+                {"Nombre:", nameField, "Dirección:", addressField},
+                {"Ciudad:", townField, "Provincia:", provinceField},
+                {"País:", countryCombo, "Código Postal:", postCodeField},
+                {"CIF:", cifField, "Teléfono:", phoneField},
+                {"Email:", emailField, "Web:", websiteField}
+        };
+
+        for (int row = 0; row < rows.length; row++) {
+            addLabelAndField(formPanel, gbc,
+                    (String) rows[row][0], (Component) rows[row][1],
+                    (String) rows[row][2], (Component) rows[row][3], row);
+        }
 
         JPanel buttonPanel = new JPanel();
         JButton saveButton = new JButton("Guardar");
@@ -255,6 +258,33 @@ public class Provider {
         dialog.add(buttonPanel, BorderLayout.SOUTH);
 
         dialog.setVisible(true);
+    }
+
+    private void loadCountries() {
+        String query = "SELECT name FROM countries ORDER BY name";
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                countryCombo.addItem(rs.getString("name"));
+            }
+        } catch (SQLException e) {
+            logger.info("Error al cargar países.");
+        }
+    }
+
+    private void addLabelAndField(JPanel panel, GridBagConstraints gbc, String label1, Component comp1,
+                                  String label2, Component comp2, int row) {
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.5;
+        panel.add(new JLabel(label1), gbc);
+        gbc.gridx = 1;
+        panel.add(comp1, gbc);
+        gbc.gridx = 2;
+        panel.add(new JLabel(label2), gbc);
+        gbc.gridx = 3;
+        panel.add(comp2, gbc);
     }
 
     public void modifyProvider(JPanel panel, Provider updatedProvider, int id) {

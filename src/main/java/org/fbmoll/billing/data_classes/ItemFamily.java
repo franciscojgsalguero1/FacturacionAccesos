@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
@@ -158,19 +159,30 @@ public class ItemFamily {
     public void modifyItemFamilyAction(JPanel panel, ActionListener listener) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(panel),
                 "Modificar Familia de Artículos", true);
-        dialog.setSize(400, 300);
+        dialog.setSize(400, 200);
         dialog.setLocationRelativeTo(panel);
         dialog.setLayout(new BorderLayout());
+        dialog.setModal(true);
 
-        JPanel formPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
 
         JTextField codeField = new JTextField(this.getCode());
         JTextField descriptionField = new JTextField(this.getDescription());
 
-        formPanel.add(new JLabel("Código:"));
-        formPanel.add(codeField);
-        formPanel.add(new JLabel("Descripción:"));
-        formPanel.add(descriptionField);
+        Object[][] rows = {
+                {"Código:", codeField},
+                {"Descripción:", descriptionField}
+        };
+
+        for (int row = 0; row < rows.length; row++) {
+            addLabelAndField(formPanel, gbc,
+                    (String) rows[row][0], (Component) rows[row][1], row);
+        }
 
         JPanel buttonPanel = new JPanel();
         JButton saveButton = new JButton("Guardar");
@@ -208,6 +220,16 @@ public class ItemFamily {
         dialog.add(formPanel, BorderLayout.CENTER);
         dialog.add(buttonPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
+    }
+
+    private void addLabelAndField(JPanel panel, GridBagConstraints gbc, String label1, Component comp1, int row) {
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.2;
+        panel.add(new JLabel(label1), gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 0.8;
+        panel.add(comp1, gbc);
     }
 
     public void modifyItemFamily(JPanel panel, ItemFamily updatedFamily, int id) {

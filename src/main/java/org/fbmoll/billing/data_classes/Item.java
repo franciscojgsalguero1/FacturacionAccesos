@@ -188,9 +188,10 @@ public class Item {
     public void modifyItemAction(JPanel panel, ActionListener listener) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(panel),
                 "Modificar Artículo", true);
-        dialog.setSize(400, 500);
+        dialog.setSize(800, 300);
         dialog.setLocationRelativeTo(panel);
         dialog.setLayout(new BorderLayout());
+        dialog.setModal(true);
 
         JPanel formPanel = new JPanel(new GridLayout(0, 2));
 

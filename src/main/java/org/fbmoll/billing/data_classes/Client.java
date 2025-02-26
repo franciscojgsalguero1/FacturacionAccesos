@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
@@ -37,6 +38,7 @@ public class Client {
     final double discount;
     final Button edit;
     final Button delete;
+    final JComboBox<String> countryCombo = new JComboBox<>();
 
     static final Logger logger = LoggerFactory.getLogger(Client.class);
 
@@ -196,11 +198,12 @@ public class Client {
     public void modifyClientAction(JPanel panel, ActionListener listener) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(panel),
                 "Modificar Cliente", true);
-        dialog.setSize(400, 500);
+        dialog.setSize(800, 300);
         dialog.setLocationRelativeTo(panel);
         dialog.setLayout(new BorderLayout());
+        dialog.setModal(true);
 
-        JPanel formPanel = new JPanel(new GridLayout(0, 2));
+        JPanel formPanel = new JPanel(new GridBagLayout());
         JTextField nameField = new JTextField(this.getPersonData().getName());
         JTextField addressField = new JTextField(this.getAddress().getStreet());
         JTextField postCodeField = new JTextField(String.valueOf(this.getAddress().getPostCode()));
@@ -214,30 +217,28 @@ public class Client {
         JTextField riskField = new JTextField(String.valueOf(this.getRisk()));
         JTextField discountField = new JTextField(String.valueOf(this.getDiscount()));
 
-        formPanel.add(new JLabel("Nombre:"));
-        formPanel.add(nameField);
-        formPanel.add(new JLabel("Dirección:"));
-        formPanel.add(addressField);
-        formPanel.add(new JLabel("Código Postal:"));
-        formPanel.add(postCodeField);
-        formPanel.add(new JLabel("Ciudad:"));
-        formPanel.add(townField);
-        formPanel.add(new JLabel("Provincia:"));
-        formPanel.add(provinceField);
-        formPanel.add(new JLabel("País:"));
-        formPanel.add(countryField);
-        formPanel.add(new JLabel("CIF:"));
-        formPanel.add(cifField);
-        formPanel.add(new JLabel("Teléfono:"));
-        formPanel.add(phoneField);
-        formPanel.add(new JLabel("Email:"));
-        formPanel.add(emailField);
-        formPanel.add(new JLabel("IBAN:"));
-        formPanel.add(ibanField);
-        formPanel.add(new JLabel("Riesgo:"));
-        formPanel.add(riskField);
-        formPanel.add(new JLabel("Descuento:"));
-        formPanel.add(discountField);
+        loadCountries();
+
+        formPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.WEST;
+
+        Object[][] rows = {
+                {"Nombre:", nameField, "Dirección:", addressField},
+                {"Ciudad:", townField, "Provincia:", provinceField},
+                {"País:", countryCombo, "Código Postal:", postCodeField},
+                {"CIF:", cifField, "Teléfono:", phoneField},
+                {"Email:", emailField, "IBAN:", ibanField},
+                {"Riesgo:", riskField, "Descuento:", discountField}
+        };
+
+        for (int row = 0; row < rows.length; row++) {
+            addLabelAndField(formPanel, gbc,
+                    (String) rows[row][0], (Component) rows[row][1],
+                    (String) rows[row][2], (Component) rows[row][3], row);
+        }
 
         JPanel buttonPanel = new JPanel();
         JButton saveButton = new JButton("Guardar");
@@ -358,5 +359,36 @@ public class Client {
             panel.revalidate();
             panel.repaint();
         });
+    }
+
+    private void loadCountries() {
+        String query = "SELECT name FROM countries ORDER BY name";
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                countryCombo.addItem(rs.getString("name"));
+            }
+        } catch (SQLException e) {
+            logger.info("Error al cargar países.");
+        }
+    }
+
+    private void addLabelAndField(JPanel panel, GridBagConstraints gbc, String label1, Component comp1,
+                                  String label2, Component comp2, int row) {
+        gbc.gridy = row;
+
+        gbc.gridx = 0;
+        gbc.weightx = 0.3;
+        panel.add(new JLabel(label1), gbc);
+
+        gbc.gridx = 1;
+        panel.add(comp1, gbc);
+
+        gbc.gridx = 2;
+        panel.add(new JLabel(label2), gbc);
+
+        gbc.gridx = 3;
+        panel.add(comp2, gbc);
     }
 }

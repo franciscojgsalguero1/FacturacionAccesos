@@ -38,11 +38,21 @@ public class CreateProviderForm extends JDialog {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.WEST;
-        addLabelAndField(formPanel, gbc, "Nombre:", nameField, "Dirección:", addressField, 0);
-        addLabelAndField(formPanel, gbc, "Ciudad:", townField, "Provincia:", provinceField, 1);
-        addLabelAndField(formPanel, gbc, "País:", countryCombo, "Código Postal:", postCodeField, 2);
-        addLabelAndField(formPanel, gbc, "CIF:", cifField, "Teléfono:", phoneField, 3);
-        addLabelAndField(formPanel, gbc, "Email:", emailField, "Web:", websiteField, 4);
+
+        Object[][] rows = {
+                {"Nombre:", nameField, "Dirección:", addressField},
+                {"Ciudad:", townField, "Provincia:", provinceField},
+                {"País:", countryCombo, "Código Postal:", postCodeField},
+                {"CIF:", cifField, "Teléfono:", phoneField},
+                {"Email:", emailField, "Web:", websiteField}
+        };
+
+        for (int row = 0; row < rows.length; row++) {
+            addLabelAndField(formPanel, gbc,
+                    (String) rows[row][0], (Component) rows[row][1],
+                    (String) rows[row][2], (Component) rows[row][3], row);
+        }
+
         JButton saveButton = new JButton("Guardar");
         saveButton.addActionListener(e -> saveProvider());
         JButton cancelButton = new JButton("Cancelar");

@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
@@ -158,19 +159,30 @@ public class IVATypes {
     public void modifyIVATypesAction(JPanel panel, ActionListener listener) {
         JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(panel),
                 "Modificar Tipo de IVA", true);
-        dialog.setSize(400, 300);
+        dialog.setSize(400, 200);
         dialog.setLocationRelativeTo(panel);
         dialog.setLayout(new BorderLayout());
+        dialog.setModal(true);
 
-        JPanel formPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        formPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
 
         JTextField amountField = new JTextField(String.valueOf(this.getAmount()));
         JTextField descriptionField = new JTextField(this.getDescription());
 
-        formPanel.add(new JLabel("Porcentaje de IVA:"));
-        formPanel.add(amountField);
-        formPanel.add(new JLabel("Descripción:"));
-        formPanel.add(descriptionField);
+        Object[][] rows = {
+                {"Porcentaje de IVA:", amountField},
+                {"Descripción:", descriptionField}
+        };
+
+        for (int row = 0; row < rows.length; row++) {
+            addLabelAndField(formPanel, gbc,
+                    (String) rows[row][0], (Component) rows[row][1], row);
+        }
 
         JPanel buttonPanel = new JPanel();
         JButton saveButton = new JButton("Guardar");
@@ -264,5 +276,15 @@ public class IVATypes {
             panel.revalidate();
             panel.repaint();
         });
+    }
+
+    private void addLabelAndField(JPanel panel, GridBagConstraints gbc, String label1, Component comp1, int row) {
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.weightx = 0.3;
+        panel.add(new JLabel(label1), gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        panel.add(comp1, gbc);
     }
 }
