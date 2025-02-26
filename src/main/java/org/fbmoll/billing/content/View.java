@@ -12,12 +12,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
+import java.util.Map;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class View extends JFrame implements ActionListener {
-    final JPanel mainPanel;
     static final Logger logger = LoggerFactory.getLogger(View.class);
+    final JPanel mainPanel;
 
     public View() {
         this.setTitle("Sistema de Gestión");
@@ -84,50 +84,113 @@ public class View extends JFrame implements ActionListener {
     @SneakyThrows
     public void actionPerformed(ActionEvent e) {
         Object source = e.getSource();
+        String actionCommand = e.getActionCommand();
 
         if (source instanceof JMenuItem item) {
-            String itemText = item.getText();
+            handleMenuItemAction(item.getText());
+        } else {
+            handleEntityActions(source, actionCommand);
+        }
+    }
 
-            switch (itemText) {
-                case Constants.FIELD_CLIENTS -> Client.showClientTable(mainPanel, this);
-                case Constants.FIELD_ARTICLES -> Item.showItemTable(mainPanel, this);
-                case Constants.FIELD_PROVIDERS -> Provider.showProviderTable(mainPanel, this);
-                case Constants.FIELD_WORKERS -> Worker.showWorkerTable(mainPanel, this);
-                case Constants.FIELD_FAMILIES -> ItemFamily.showItemFamilyTable(mainPanel, this);
-                case Constants.FIELD_IVA_TYPES -> IVATypes.showIVATypesTable(mainPanel, this);
-                case "Ver Facturas" -> Invoice.showInvoiceTable(mainPanel, this);
-                default -> logger.info("Not found.");
-            }
-        } else if (Constants.CLIENT_EDIT.equals(e.getActionCommand()) && source instanceof Client client) {
+    private void handleMenuItemAction(String itemText) {
+        Map<String, Runnable> menuActions = Map.of(
+                Constants.FIELD_CLIENTS, () -> Client.showClientTable(mainPanel, this),
+                Constants.FIELD_ARTICLES, () -> Item.showItemTable(mainPanel, this),
+                Constants.FIELD_PROVIDERS, () -> Provider.showProviderTable(mainPanel, this),
+                Constants.FIELD_WORKERS, () -> Worker.showWorkerTable(mainPanel, this),
+                Constants.FIELD_FAMILIES, () -> ItemFamily.showItemFamilyTable(mainPanel, this),
+                Constants.FIELD_IVA_TYPES, () -> IVATypes.showIVATypesTable(mainPanel, this),
+                "Ver Facturas", () -> Invoice.showInvoiceTable(mainPanel, this),
+                "Ver Rectificativas", () -> CorrectiveInvoice.showCorrectiveInvoiceTable(mainPanel, this)
+        );
+
+        menuActions.getOrDefault(itemText, () -> logger.info("Not found.")).run();
+    }
+
+    private void handleEntityActions(Object source, String actionCommand) {
+        if (source instanceof Client client) {
+            handleClientActions(client, actionCommand);
+        } else if (source instanceof Item item) {
+            handleItemActions(item, actionCommand);
+        } else if (source instanceof Provider provider) {
+            handleProviderActions(provider, actionCommand);
+        } else if (source instanceof Worker worker) {
+            handleWorkerActions(worker, actionCommand);
+        } else if (source instanceof ItemFamily itemFamily) {
+            handleItemFamilyActions(itemFamily, actionCommand);
+        } else if (source instanceof IVATypes ivaTypes) {
+            handleIVAActions(ivaTypes, actionCommand);
+        } else if (source instanceof Invoice invoice) {
+            handleInvoiceActions(invoice, actionCommand);
+        } else if (source instanceof CorrectiveInvoice invoice) {
+            handleCorrectiveInvoiceActions(invoice, actionCommand);
+        }
+    }
+
+    private void handleClientActions(Client client, String actionCommand) {
+        if (actionCommand.equals(Constants.CLIENT_EDIT)) {
             client.modifyClientAction(mainPanel, this);
-        } else if (Constants.CLIENT_DELETE.equals(e.getActionCommand()) && source instanceof Client client) {
+        } else if (actionCommand.equals(Constants.CLIENT_DELETE)) {
             client.deleteClient(mainPanel, client.getId());
-        } else if (Constants.ARTICLE_EDIT.equals(e.getActionCommand()) && source instanceof Item item) {
+        }
+    }
+
+    private void handleItemActions(Item item, String actionCommand) {
+        if (actionCommand.equals(Constants.ARTICLE_EDIT)) {
             item.modifyItemAction(mainPanel, this);
-        } else if (Constants.ARTICLE_DELETE.equals(e.getActionCommand()) && source instanceof Item item) {
+        } else if (actionCommand.equals(Constants.ARTICLE_DELETE)) {
             item.deleteItem(mainPanel, item.getId());
-        } else if (Constants.PROVIDER_EDIT.equals(e.getActionCommand()) && source instanceof Provider provider) {
+        }
+    }
+
+    private void handleProviderActions(Provider provider, String actionCommand) {
+        if (actionCommand.equals(Constants.PROVIDER_EDIT)) {
             provider.modifyProviderAction(mainPanel, this);
-        } else if (Constants.PROVIDER_DELETE.equals(e.getActionCommand()) && source instanceof Provider provider) {
+        } else if (actionCommand.equals(Constants.PROVIDER_DELETE)) {
             provider.deleteProvider(mainPanel, provider.getId());
-        } else if (Constants.WORKER_EDIT.equals(e.getActionCommand()) && source instanceof Worker worker) {
+        }
+    }
+
+    private void handleWorkerActions(Worker worker, String actionCommand) {
+        if (actionCommand.equals(Constants.WORKER_EDIT)) {
             worker.modifyWorkerAction(mainPanel, this);
-        } else if (Constants.WORKER_DELETE.equals(e.getActionCommand()) && source instanceof Worker worker) {
+        } else if (actionCommand.equals(Constants.WORKER_DELETE)) {
             worker.deleteWorker(mainPanel, worker.getId());
-        } else if (Constants.FAMILY_EDIT.equals(e.getActionCommand()) && source instanceof ItemFamily itemFamily) {
+        }
+    }
+
+    private void handleItemFamilyActions(ItemFamily itemFamily, String actionCommand) {
+        if (actionCommand.equals(Constants.FAMILY_EDIT)) {
             itemFamily.modifyItemFamilyAction(mainPanel, this);
-        } else if (Constants.FAMILY_DELETE.equals(e.getActionCommand()) && source instanceof ItemFamily itemFamily) {
+        } else if (actionCommand.equals(Constants.FAMILY_DELETE)) {
             itemFamily.deleteItemFamily(mainPanel, itemFamily.getId());
-        } else if (Constants.IVA_EDIT.equals(e.getActionCommand()) && source instanceof IVATypes ivaTypes) {
+        }
+    }
+
+    private void handleIVAActions(IVATypes ivaTypes, String actionCommand) {
+        if (actionCommand.equals(Constants.IVA_EDIT)) {
             ivaTypes.modifyIVATypesAction(mainPanel, this);
-        } else if (Constants.IVA_DELETE.equals(e.getActionCommand()) && source instanceof IVATypes ivaTypes) {
+        } else if (actionCommand.equals(Constants.IVA_DELETE)) {
             ivaTypes.deleteIVATypes(mainPanel, ivaTypes.getId());
-        } else if (Constants.INVOICE_VIEW.equals(e.getActionCommand()) && source instanceof Invoice invoice) {
-            new ViewInvoice(mainPanel, invoice.getId());
-        } else if (Constants.INVOICE_EDIT.equals(e.getActionCommand()) && source instanceof Invoice invoice) {
-            invoice.modifyInvoiceAction(mainPanel, this);
-        } else if (Constants.INVOICE_DELETE.equals(e.getActionCommand()) && source instanceof Invoice invoice) {
-            invoice.deleteInvoice(mainPanel, invoice.getId());
+        }
+    }
+
+    private void handleInvoiceActions(Invoice invoice, String actionCommand) {
+        switch (actionCommand) {
+            case Constants.INVOICE_VIEW -> new ViewInvoice(mainPanel, invoice.getId());
+            case Constants.INVOICE_EDIT -> invoice.modifyInvoiceAction(mainPanel, this);
+            case Constants.INVOICE_DELETE -> invoice.deleteInvoice(mainPanel, invoice.getId());
+            default -> throw new IllegalStateException("Unexpected value: " + actionCommand);
+        }
+    }
+
+    private void handleCorrectiveInvoiceActions(CorrectiveInvoice invoice, String actionCommand) {
+        switch (actionCommand) {
+            case Constants.INVOICE_VIEW -> new ViewCorrectiveInvoice(mainPanel, invoice.getId());
+            case Constants.INVOICE_EDIT -> invoice.modifyCorrectiveInvoiceAction(mainPanel, this);
+            case Constants.INVOICE_DELETE -> invoice.deleteCorrectiveInvoice(mainPanel, invoice.getId());
+            default -> throw new IllegalStateException("Unexpected value: " + actionCommand);
         }
     }
 }

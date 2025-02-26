@@ -14,6 +14,6 @@ public class ItemDTO {
     final double cost;
     final double margin;
     final double price;
-    final int supplier;
+    final String supplier;
     final int stock;
 }

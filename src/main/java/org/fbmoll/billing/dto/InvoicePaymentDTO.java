@@ -16,6 +16,7 @@ public class InvoicePaymentDTO {
     final double vatAmount;
     final double totalAmount;
     final boolean isPaid;
-    final int paymentMethod;
+    final boolean corrected;
+    final String paymentMethod;
     final Date paymentDate;
 }

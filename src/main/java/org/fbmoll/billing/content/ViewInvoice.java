@@ -1,6 +1,8 @@
 package org.fbmoll.billing.content;
 
+import org.fbmoll.billing.resources.Constants;
 import org.fbmoll.billing.resources.Utils;
+
 import javax.swing.*;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -23,7 +25,6 @@ public class ViewInvoice extends JDialog {
     private final JLabel totalAmountLabel = createStyledLabel();
     private final JLabel paymentMethodLabel = createStyledLabel();
     private final JLabel paymentDateLabel = createStyledLabel();
-    private final JTable itemsTable;
     private final DefaultTableModel tableModel;
 
     public ViewInvoice(JPanel parentPanel, int invoiceId) {
@@ -33,15 +34,13 @@ public class ViewInvoice extends JDialog {
         setModal(true);
         setLocationRelativeTo(parentPanel);
 
-        // Padding around entire invoice
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBorder(new EmptyBorder(20, 30, 20, 30));
         add(mainPanel);
 
-        // HEADER - Title and Invoice Info
         JPanel headerPanel = new JPanel(new BorderLayout());
         JLabel titleLabel = new JLabel("FACTURA", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 22));
+        titleLabel.setFont(new Font(Constants.ARIAL, Font.BOLD, 22));
         titleLabel.setBorder(new EmptyBorder(10, 0, 10, 0));
         headerPanel.add(titleLabel, BorderLayout.NORTH);
 
@@ -52,38 +51,30 @@ public class ViewInvoice extends JDialog {
         headerPanel.add(topRightPanel, BorderLayout.EAST);
         mainPanel.add(headerPanel, BorderLayout.NORTH);
 
-        // CLIENT & WORKER DETAILS (reordered and compacted)
         JPanel detailsPanel = new JPanel(new GridLayout(2, 3, 10, 5));
-        // Create a compound border for inner padding (10px) inside the titled border
         detailsPanel.setBorder(new CompoundBorder(
                 BorderFactory.createTitledBorder("Datos de la Factura"),
                 new EmptyBorder(10, 10, 0, 10)
         ));
-        // Set a preferred size to make the panel smaller overall
         detailsPanel.setPreferredSize(new Dimension(400, 100));
-        // Row 1
         detailsPanel.add(createFieldRow("Cliente:", clientNameLabel));
         detailsPanel.add(createFieldRow("Trabajador:", workerNameLabel));
         detailsPanel.add(createFieldRow("Forma de Pago:", paymentMethodLabel));
-        // Row 2
         detailsPanel.add(createFieldRow("Base Imponible:", baseAmountLabel));
         detailsPanel.add(createFieldRow("IVA:", vatAmountLabel));
         detailsPanel.add(createFieldRow("Total:", totalAmountLabel));
-
         mainPanel.add(detailsPanel, BorderLayout.CENTER);
 
-        // TABLE - Items List
         tableModel = new DefaultTableModel(
                 new String[]{"Código", "Descripción", "Precio", "IVA", "Cantidad", "Subtotal", "Total"}, 0) {
+            @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
 
-        itemsTable = new JTable(tableModel);
+        JTable itemsTable = new JTable(tableModel);
         itemsTable.setRowHeight(30);
-
-        // Center the text in all table cells
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
         for (int i = 0; i < itemsTable.getColumnCount(); i++) {
@@ -91,36 +82,33 @@ public class ViewInvoice extends JDialog {
         }
 
         JScrollPane tableScroll = new JScrollPane(itemsTable);
-        // Add inner padding (10px) to the titled border of the table scroll pane
         tableScroll.setBorder(new CompoundBorder(
                 BorderFactory.createTitledBorder("Detalles de los Artículos"),
                 new EmptyBorder(10, 10, 10, 10)
         ));
 
-        // Adjust table panel: add a moderate top margin and fix its preferred height
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBorder(new EmptyBorder(20, 0, 0, 0));
         tablePanel.add(tableScroll);
-        tablePanel.setPreferredSize(new Dimension(0, 350)); // Adjust height as needed
-
+        tablePanel.setPreferredSize(new Dimension(0, 350));
         mainPanel.add(tablePanel, BorderLayout.SOUTH);
 
-        // Load Invoice Data
         loadInvoice(invoiceId);
         setVisible(true);
     }
 
-    /**
-     * Creates a row with a label and a value field for styling.
-     */
+    private JLabel createStyledLabel() {
+        JLabel label = new JLabel();
+        label.setFont(new Font(Constants.ARIAL, Font.PLAIN, 13));
+        return label;
+    }
+
     private JPanel createFieldRow(String labelText, JLabel label) {
-        // Use a FlowLayout with a small vertical gap to keep things compact
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
         JLabel lbl = new JLabel(labelText);
-        lbl.setFont(new Font("Arial", Font.BOLD, 13));
-        lbl.setPreferredSize(new Dimension(110, 30)); // Label size
+        lbl.setFont(new Font(Constants.ARIAL, Font.BOLD, 13));
+        lbl.setPreferredSize(new Dimension(110, 30));
 
-        // Create a compound border with the line border and an inner empty border for padding
         label.setBorder(BorderFactory.createCompoundBorder(
                 new LineBorder(Color.LIGHT_GRAY, 1),
                 new EmptyBorder(2, 4, 2, 4)
@@ -128,83 +116,96 @@ public class ViewInvoice extends JDialog {
         label.setOpaque(true);
         label.setBackground(Color.WHITE);
         label.setHorizontalAlignment(SwingConstants.CENTER);
-        label.setFont(new Font("Arial", Font.PLAIN, 13));
-        label.setPreferredSize(new Dimension(140, 30)); // Value box size
+        label.setFont(new Font(Constants.ARIAL, Font.PLAIN, 13));
+        label.setPreferredSize(new Dimension(140, 30));
 
         panel.add(lbl);
         panel.add(label);
         return panel;
     }
 
-    /**
-     * Creates a styled label for display purposes.
-     */
-    private JLabel createStyledLabel() {
-        JLabel label = new JLabel();
-        label.setFont(new Font("Arial", Font.PLAIN, 13));
-        return label;
+    private void loadInvoice(int invoiceId) {
+        try (Connection conn = Utils.getConnection()) {
+            loadInvoiceDetails(conn, invoiceId);
+            loadInvoiceLines(conn, invoiceId);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error al cargar la factura: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
     }
 
-    private void loadInvoice(int invoiceId) {
-        String invoiceQuery = "SELECT * FROM facturasclientes WHERE idFacturaCliente = ?";
-        String clientQuery = "SELECT nombreCliente FROM clientes WHERE idCliente = ?";
-        String workerQuery = "SELECT name FROM workers WHERE id = ?";
-        // New prepared statement for payment method lookup from formapago table
-        String paymentQuery = "SELECT tipoformapago FROM formapago WHERE idFormapago = ?";
-        String linesQuery = "SELECT idArticulo, cantidad, pvpArticulo, iva FROM lineasfacturasclientes WHERE numeroFacturaCliente = ?";
-        String articleQuery = "SELECT codigoArticulo, descripcionArticulo, pvpArticulo FROM articulos WHERE idArticulo = ?";
-
-        try (Connection conn = Utils.getConnection();
-             PreparedStatement invoicePs = conn.prepareStatement(invoiceQuery);
-             PreparedStatement clientPs = conn.prepareStatement(clientQuery);
-             PreparedStatement workerPs = conn.prepareStatement(workerQuery);
-             PreparedStatement paymentPs = conn.prepareStatement(paymentQuery);
-             PreparedStatement linesPs = conn.prepareStatement(linesQuery);
-             PreparedStatement articlePs = conn.prepareStatement(articleQuery)) {
-
-            // Load Invoice Data
+    private void loadInvoiceDetails(Connection conn, int invoiceId) throws SQLException {
+        String invoiceQuery = "SELECT fechaFacturaCliente, numeroFacturaCliente, baseImponibleFacturaCliente, " +
+                "ivaFacturaCliente, totalFacturaCliente, fechaCobroFactura, formaCobroFactura, " +
+                "idClienteFactura, idTrabajadorFactura " +
+                "FROM facturasclientes WHERE idFacturaCliente = ?";
+        try (PreparedStatement invoicePs = conn.prepareStatement(invoiceQuery)) {
             invoicePs.setInt(1, invoiceId);
             try (ResultSet invoiceRs = invoicePs.executeQuery()) {
                 if (invoiceRs.next()) {
                     dateLabel.setText(invoiceRs.getString("fechaFacturaCliente"));
                     invoiceNumberLabel.setText(String.valueOf(invoiceRs.getInt("numeroFacturaCliente")));
+                    baseAmountLabel.setText(String.format(Constants.TWO_DEC,
+                            invoiceRs.getDouble("baseImponibleFacturaCliente")));
+                    vatAmountLabel.setText(String.format(Constants.TWO_DEC,
+                            invoiceRs.getDouble("ivaFacturaCliente")));
+                    totalAmountLabel.setText(String.format(Constants.TWO_DEC,
+                            invoiceRs.getDouble("totalFacturaCliente")));
+                    paymentDateLabel.setText(invoiceRs.getString("fechaCobroFactura"));
 
                     int clientId = invoiceRs.getInt("idClienteFactura");
                     int workerId = invoiceRs.getInt("idTrabajadorFactura");
-
-                    baseAmountLabel.setText(String.format("%.2f €", invoiceRs.getDouble("baseImponibleFacturaCliente")));
-                    vatAmountLabel.setText(String.format("%.2f €", invoiceRs.getDouble("ivaFacturaCliente")));
-                    totalAmountLabel.setText(String.format("%.2f €", invoiceRs.getDouble("totalFacturaCliente")));
-                    paymentDateLabel.setText(invoiceRs.getString("fechaCobroFactura"));
-
-                    // Obtain the payment method from the formapago table
                     int formaPagoId = invoiceRs.getInt("formaCobroFactura");
-                    paymentPs.setInt(1, formaPagoId);
-                    try (ResultSet paymentRs = paymentPs.executeQuery()) {
-                        if (paymentRs.next()) {
-                            paymentMethodLabel.setText(paymentRs.getString("tipoformapago"));
-                        }
-                    }
 
-                    // Load Client Name
-                    clientPs.setInt(1, clientId);
-                    try (ResultSet clientRs = clientPs.executeQuery()) {
-                        if (clientRs.next()) {
-                            clientNameLabel.setText(clientRs.getString("nombreCliente"));
-                        }
-                    }
-
-                    // Load Worker Name
-                    workerPs.setInt(1, workerId);
-                    try (ResultSet workerRs = workerPs.executeQuery()) {
-                        if (workerRs.next()) {
-                            workerNameLabel.setText(workerRs.getString("name"));
-                        }
-                    }
+                    loadPaymentMethod(conn, formaPagoId);
+                    loadClientName(conn, clientId);
+                    loadWorkerName(conn, workerId);
                 }
             }
+        }
+    }
 
-            // Load Invoice Lines
+    private void loadPaymentMethod(Connection conn, int formaPagoId) throws SQLException {
+        String paymentQuery = "SELECT tipoformapago FROM formapago WHERE idFormapago = ?";
+        try (PreparedStatement paymentPs = conn.prepareStatement(paymentQuery)) {
+            paymentPs.setInt(1, formaPagoId);
+            try (ResultSet paymentRs = paymentPs.executeQuery()) {
+                if (paymentRs.next()) {
+                    paymentMethodLabel.setText(paymentRs.getString("tipoformapago"));
+                }
+            }
+        }
+    }
+
+    private void loadClientName(Connection conn, int clientId) throws SQLException {
+        String clientQuery = "SELECT nombreCliente FROM clientes WHERE idCliente = ?";
+        try (PreparedStatement clientPs = conn.prepareStatement(clientQuery)) {
+            clientPs.setInt(1, clientId);
+            try (ResultSet clientRs = clientPs.executeQuery()) {
+                if (clientRs.next()) {
+                    clientNameLabel.setText(clientRs.getString("nombreCliente"));
+                }
+            }
+        }
+    }
+
+    private void loadWorkerName(Connection conn, int workerId) throws SQLException {
+        String workerQuery = "SELECT name FROM workers WHERE id = ?";
+        try (PreparedStatement workerPs = conn.prepareStatement(workerQuery)) {
+            workerPs.setInt(1, workerId);
+            try (ResultSet workerRs = workerPs.executeQuery()) {
+                if (workerRs.next()) {
+                    workerNameLabel.setText(workerRs.getString("name"));
+                }
+            }
+        }
+    }
+
+    private void loadInvoiceLines(Connection conn, int invoiceId) throws SQLException {
+        String linesQuery = "SELECT idArticulo, cantidad, iva FROM lineasfacturasclientes " +
+                "WHERE numeroFacturaCliente = ?";
+        try (PreparedStatement linesPs = conn.prepareStatement(linesQuery)) {
             linesPs.setInt(1, invoiceId);
             try (ResultSet linesRs = linesPs.executeQuery()) {
                 tableModel.setRowCount(0);
@@ -212,38 +213,44 @@ public class ViewInvoice extends JDialog {
                     int itemId = linesRs.getInt("idArticulo");
                     int quantity = linesRs.getInt("cantidad");
                     double lineVat = linesRs.getDouble("iva");
-                    double price;
-                    String code = "";
-                    String name = "";
 
-                    articlePs.setInt(1, itemId);
-                    try (ResultSet articleRs = articlePs.executeQuery()) {
-                        if (articleRs.next()) {
-                            code = articleRs.getString("codigoArticulo");
-                            name = articleRs.getString("descripcionArticulo");
-                            price = articleRs.getDouble("pvpArticulo");
-                        } else {
-                            continue;
-                        }
+                    Article article = getArticleDetails(conn, itemId);
+                    if (article == null) {
+                        continue;
                     }
 
-                    double subtotal = price * quantity;
-                    double total = subtotal + subtotal * lineVat / 100;
+                    double subtotal = article.price * quantity;
+                    double total = subtotal + (subtotal * lineVat / 100);
                     tableModel.addRow(new Object[]{
-                            code,
-                            name,
-                            String.format("%.2f €", price),
+                            article.code,
+                            article.description,
+                            String.format(Constants.TWO_DEC, article.price),
                             lineVat + " %",
                             quantity,
-                            String.format("%.2f €", subtotal),
-                            String.format("%.2f €", total)
+                            String.format(Constants.TWO_DEC, subtotal),
+                            String.format(Constants.TWO_DEC, total)
                     });
                 }
             }
-
-        } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error al cargar la factura: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
+
+    private Article getArticleDetails(Connection conn, int itemId) throws SQLException {
+        String articleQuery = "SELECT codigoArticulo, descripcionArticulo, pvpArticulo FROM articulos" +
+                " WHERE idArticulo = ?";
+        try (PreparedStatement articlePs = conn.prepareStatement(articleQuery)) {
+            articlePs.setInt(1, itemId);
+            try (ResultSet articleRs = articlePs.executeQuery()) {
+                if (articleRs.next()) {
+                    String code = articleRs.getString("codigoArticulo");
+                    String description = articleRs.getString("descripcionArticulo");
+                    double price = articleRs.getDouble("pvpArticulo");
+                    return new Article(code, description, price);
+                }
+            }
+        }
+        return null;
+    }
+
+    private record Article(String code, String description, double price) {}
 }

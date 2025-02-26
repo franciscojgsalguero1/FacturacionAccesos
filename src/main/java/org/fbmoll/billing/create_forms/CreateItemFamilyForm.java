@@ -22,7 +22,6 @@ public class CreateItemFamilyForm extends JDialog {
         setModal(true);
         setLocationRelativeTo(parentPanel);
 
-        // Panel principal con GridBagLayout
         JPanel formPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
@@ -61,8 +60,8 @@ public class CreateItemFamilyForm extends JDialog {
 
     private void saveItemFamily() {
         try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement(
-                     "INSERT INTO familiaarticulos (codigoFamiliaArticulos, denominacionFamilias) VALUES (?, ?)")) {
+             PreparedStatement ps = conn.prepareStatement("INSERT INTO familiaarticulos (codigoFamiliaArticulos," +
+                     " denominacionFamilias) VALUES (?, ?)")) {
 
             ps.setString(1, codeField.getText());
             ps.setString(2, descriptionField.getText());
@@ -72,8 +71,8 @@ public class CreateItemFamilyForm extends JDialog {
             dispose();
             ItemFamily.showItemFamilyTable(parentPanel, e -> {});
         } catch (SQLException | NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Error al crear familia de artículos: " + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Error al crear: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

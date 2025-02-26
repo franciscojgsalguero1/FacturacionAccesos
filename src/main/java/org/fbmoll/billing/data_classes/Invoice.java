@@ -29,20 +29,20 @@ public class Invoice {
     final JPanel panel;
     final int id;
     final Date date;
-    final int clientId;
-    final int workerId;
+    final String client;
+    final String worker;
     final InvoicePaymentDTO invoicePaymentDTO;
     final Button view;
     final Button edit;
     final Button delete;
 
-    public Invoice(JPanel panel, ActionListener listener, int id, Date date, int clientId, int workerId,
+    public Invoice(JPanel panel, ActionListener listener, int id, Date date, String client, String worker,
                    InvoicePaymentDTO invoicePaymentDTO) {
         this.panel = panel;
         this.id = id;
         this.date = date;
-        this.clientId = clientId;
-        this.workerId = workerId;
+        this.client = client;
+        this.worker = worker;
         this.invoicePaymentDTO = invoicePaymentDTO;
 
         this.view = new Button("Ver");
@@ -128,25 +128,42 @@ public class Invoice {
 
     public static List<Invoice> getInvoices(JPanel panel, ActionListener listener) {
         List<Invoice> invoices = new ArrayList<>();
-        String query = "SELECT * FROM facturasclientes";
+        // Added f.corrected to the select list (assume the column name is "corrected")
+        String query = "SELECT f.idFacturaCliente, f.fechaFacturaCliente, " +
+                "c.nombreCliente, w.name AS trabajadorNombre, fp.tipoFormaPago, " +
+                "f.numeroFacturaCliente, f.baseImponibleFacturaCliente, " +
+                "f.ivaFacturaCliente, f.totalFacturaCliente, f.cobradaFactura, " +
+                "f.corrected, f.fechaCobroFactura " +
+                "FROM facturasclientes f " +
+                "JOIN clientes c ON f.idClienteFactura = c.idCliente " +
+                "JOIN workers w ON f.idTrabajadorFactura = w.id " +
+                "JOIN formapago fp ON f.formaCobroFactura = fp.idFormaPago";
 
         try (Connection conn = Utils.getConnection();
              PreparedStatement ps = conn.prepareStatement(query);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
+                // Retrieve the "corrected" field (handle nulls as needed)
+                boolean corrected = false;
+                Object correctedObj = rs.getObject("corrected");
+                if (correctedObj != null) {
+                    corrected = rs.getBoolean("corrected");
+                }
+
                 invoices.add(new Invoice(
                         panel, listener, rs.getInt("idFacturaCliente"),
                         rs.getDate("fechaFacturaCliente"),
-                        rs.getInt("idClienteFactura"),
-                        rs.getInt("idTrabajadorFactura"),
+                        rs.getString("nombreCliente"),
+                        rs.getString("trabajadorNombre"),
                         new InvoicePaymentDTO(
                                 rs.getInt("numeroFacturaCliente"),
                                 rs.getDouble("baseImponibleFacturaCliente"),
                                 rs.getDouble("ivaFacturaCliente"),
                                 rs.getDouble("totalFacturaCliente"),
                                 rs.getBoolean("cobradaFactura"),
-                                rs.getInt("formaCobroFactura"),
+                                corrected,
+                                rs.getString("tipoFormaPago"),
                                 rs.getDate("fechaCobroFactura")
                         )
                 ));
@@ -160,7 +177,7 @@ public class Invoice {
     private static JTable setupInvoiceTable(List<Invoice> invoices, ActionListener listener, JPanel panel) {
         String[] columnNames = {
                 "ID", "Número", "Fecha", "ID Cliente", "ID Trabajador",
-                "Base Imponible", "IVA", "Total", "Pagada", "Forma de Pago", "Fecha de Pago",
+                "Base Imponible", "IVA", "Total", "Pagada", "Rectificada", "Forma de Pago", "Fecha de Pago",
                 "Ver", "Editar", "Eliminar"
         };
 
@@ -176,12 +193,13 @@ public class Invoice {
                     inv.getId(),
                     inv.getInvoicePaymentDTO().getNumber(),
                     inv.getDate(),
-                    inv.getClientId(),
-                    inv.getWorkerId(),
+                    inv.getClient(),
+                    inv.getWorker(),
                     inv.getInvoicePaymentDTO().getTaxableAmount(),
                     inv.getInvoicePaymentDTO().getVatAmount(),
                     inv.getInvoicePaymentDTO().getTotalAmount(),
                     inv.getInvoicePaymentDTO().isPaid() ? "Sí" : "No",
+                    inv.getInvoicePaymentDTO().isCorrected() ? "Sí" : "No",
                     inv.getInvoicePaymentDTO().getPaymentMethod(),
                     (inv.getInvoicePaymentDTO().getPaymentDate() != null) ? inv.getInvoicePaymentDTO().getPaymentDate() : "No registrada",
                     viewButton,
@@ -221,7 +239,7 @@ public class Invoice {
 
             ps.setInt(1, updatedInvoice.getInvoicePaymentDTO().getNumber());
             ps.setDate(2, updatedInvoice.getDate());
-            ps.setInt(3, updatedInvoice.getClientId());
+            ps.setString(3, updatedInvoice.getClient());
             ps.setDouble(4, updatedInvoice.getInvoicePaymentDTO().getTotalAmount());
             ps.setInt(5, id);
 
@@ -284,8 +302,8 @@ public class Invoice {
 
         JTextField numberField = new JTextField(String.valueOf(this.getInvoicePaymentDTO().getNumber()));
         JTextField dateField = new JTextField(this.getDate().toString());
-        JTextField clientIdField = new JTextField(String.valueOf(this.getClientId()));
-        JTextField workerIdField = new JTextField(String.valueOf(this.getWorkerId()));
+        JTextField clientIdField = new JTextField(String.valueOf(this.getClient()));
+        JTextField workerIdField = new JTextField(String.valueOf(this.getWorker()));
 
         JTextField taxableAmountField = new JTextField(String.valueOf(this.getInvoicePaymentDTO().getTaxableAmount()));
         JTextField vatAmountField = new JTextField(String.valueOf(this.getInvoicePaymentDTO().getVatAmount()));
@@ -328,15 +346,16 @@ public class Invoice {
                 Invoice updatedInvoice = new Invoice(
                         this.panel, listener, this.getId(),
                         Date.valueOf(dateField.getText()),
-                        Integer.parseInt(clientIdField.getText()),
-                        Integer.parseInt(workerIdField.getText()),
+                        clientIdField.getText(),
+                        workerIdField.getText(),
                         new InvoicePaymentDTO(
                                 Integer.parseInt(numberField.getText()),
                                 Double.parseDouble(taxableAmountField.getText()),
                                 Double.parseDouble(vatAmountField.getText()),
                                 Double.parseDouble(totalAmountField.getText()),
                                 isPaidCheckBox.isSelected(),
-                                Integer.parseInt(paymentMethodField.getText()),
+                                getInvoicePaymentDTO().isCorrected(),
+                                paymentMethodField.getText(),
                                 paymentDateField.getText().isEmpty() ? null : Date.valueOf(paymentDateField.getText())
                         )
                 );

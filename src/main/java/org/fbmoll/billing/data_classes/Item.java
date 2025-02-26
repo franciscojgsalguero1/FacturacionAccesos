@@ -33,16 +33,16 @@ public class Item {
     final int id;
     final ItemDTO itemData;
     final String description;
-    final int familyId;
+    final String familyId;
     final Button edit;
     final Button delete;
 
-    public Item(JPanel panel, ActionListener listener, int id, ItemDTO itemData, String description, int familyId) {
+    public Item(JPanel panel, ActionListener listener, int id, ItemDTO itemData, String description, String family) {
         this.panel = panel;
         this.id = id;
         this.itemData = itemData;
         this.description = description;
-        this.familyId = familyId;
+        this.familyId = family;
 
         this.edit = new Button(Constants.BUTTON_EDIT);
         this.delete = new Button(Constants.BUTTON_DELETE);
@@ -63,7 +63,7 @@ public class Item {
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton createButton = new JButton("Crear Artículo");
 
-        String[] filterOptions = {"Código", "Código de Barras", "Descripción", "ID Familia", "Costo", "Margen",
+        String[] filterOptions = {"Código", "Código de Barras", "Descripción", "Familia", "Costo", "Margen",
                 "Precio", "Proveedor", "Stock"};
 
         JComboBox<String> filterDropdown = new JComboBox<>(filterOptions);
@@ -107,9 +107,12 @@ public class Item {
 
     public static List<Item> getAllItems(JPanel panel, ActionListener listener) {
         List<Item> items = new ArrayList<>();
-        String query = "SELECT idArticulo, codigoArticulo, codigoBarrasArticulo, descripcionArticulo, " +
-                "familiaArticulo, costeArticulo, margenComercialArticulo, pvpArticulo, " +
-                "proveedorArticulo, stockArticulo FROM articulos";
+        String query = "SELECT a.idArticulo, a.codigoArticulo, a.codigoBarrasArticulo, a.descripcionArticulo, " +
+                "f.denominacionFamilias AS familiaNombre, a.costeArticulo, a.margenComercialArticulo, " +
+                "a.pvpArticulo, COALESCE(p.nombreProveedor, 'N/A') AS proveedorNombre, a.stockArticulo " +
+                "FROM articulos a " +
+                "LEFT JOIN familiaarticulos f ON a.familiaArticulo = f.idFamiliaArticulos " +
+                "LEFT JOIN proveedores p ON a.proveedorArticulo = p.idProveedor";
 
         try (Connection conn = Utils.getConnection();
              PreparedStatement ps = conn.prepareStatement(query);
@@ -125,11 +128,11 @@ public class Item {
                                 rs.getDouble("costeArticulo"),
                                 rs.getDouble("margenComercialArticulo"),
                                 rs.getDouble("pvpArticulo"),
-                                rs.getInt("proveedorArticulo"),
+                                rs.getString("proveedorNombre"), // Now stores supplier name
                                 rs.getInt("stockArticulo")
                         ),
                         rs.getString("descripcionArticulo"),
-                        rs.getInt("familiaArticulo")
+                        rs.getString("familiaNombre") // Now stores family name
                 ));
             }
         } catch (SQLException e) {
@@ -139,7 +142,7 @@ public class Item {
     }
 
     private static JTable setupItemTable(List<Item> items, ActionListener listener, JPanel panel) {
-        String[] columnNames = {"ID", "Código", "Código de Barras", "Descripción", "ID Familia", "Costo", "Margen",
+        String[] columnNames = {"ID", "Código", "Código de Barras", "Descripción", "Familia", "Costo", "Margen",
                 "Precio", "Proveedor", "Stock", Constants.BUTTON_EDIT, Constants.BUTTON_DELETE};
 
         Object[][] data = new Object[items.size()][columnNames.length];
@@ -153,8 +156,10 @@ public class Item {
 
             data[i] = new Object[]{
                     item.id, item.getItemData().getCode(), item.getItemData().getBarCode(), item.description,
-                    item.familyId, item.getItemData().getCost(), item.getItemData().getMargin(),
-                    item.getItemData().getPrice(), item.getItemData().getSupplier(), item.getItemData().getStock(),
+                    item.familyId, // This now contains the name instead of the ID
+                    item.getItemData().getCost(), item.getItemData().getMargin(),
+                    item.getItemData().getPrice(), item.getItemData().getSupplier(), // This contains the supplier name
+                    item.getItemData().getStock(),
                     editButton, deleteButton
             };
         }
@@ -222,11 +227,11 @@ public class Item {
             ps.setString(1, updatedItem.getItemData().getCode());
             ps.setString(2, updatedItem.getItemData().getBarCode());
             ps.setString(3, updatedItem.getDescription());
-            ps.setInt(4, updatedItem.getFamilyId());
+            ps.setString(4, updatedItem.getFamilyId());
             ps.setDouble(5, updatedItem.getItemData().getCost());
             ps.setDouble(6, updatedItem.getItemData().getMargin());
             ps.setDouble(7, updatedItem.getItemData().getPrice());
-            ps.setInt(8, updatedItem.getItemData().getSupplier());
+            ps.setString(8, updatedItem.getItemData().getSupplier());
             ps.setInt(9, updatedItem.getItemData().getStock());
             ps.setInt(10, id);
 
@@ -275,7 +280,7 @@ public class Item {
         formPanel.add(barCodeField);
         formPanel.add(new JLabel("Descripción:"));
         formPanel.add(descriptionField);
-        formPanel.add(new JLabel("ID Familia:"));
+        formPanel.add(new JLabel("Familia:"));
         formPanel.add(familyIdField);
         formPanel.add(new JLabel("Costo:"));
         formPanel.add(costField);
@@ -299,10 +304,10 @@ public class Item {
                         new ItemDTO(
                                 codeField.getText(), barCodeField.getText(), Double.parseDouble(costField.getText()),
                                 Double.parseDouble(marginField.getText()), Double.parseDouble(priceField.getText()),
-                                Integer.parseInt(supplierField.getText()), Integer.parseInt(stockField.getText())
+                                supplierField.getText(), Integer.parseInt(stockField.getText())
                         ),
                         descriptionField.getText(),
-                        Integer.parseInt(familyIdField.getText())
+                        familyIdField.getText()
                 );
 
                 this.modifyItem(panel, updatedItem, this.getId());
