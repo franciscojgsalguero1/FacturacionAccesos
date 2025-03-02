@@ -11,11 +11,12 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
+/**
+ * Clase que muestra los detalles de una factura en un JDialog.
+ * Permite visualizar información de la factura y generar un PDF de la misma.
+ */
 public class ViewInvoice extends JDialog {
     private final JLabel dateLabel = createStyledLabel();
     private final JLabel invoiceNumberLabel = createStyledLabel();
@@ -26,9 +27,15 @@ public class ViewInvoice extends JDialog {
     private final JLabel totalAmountLabel = createStyledLabel();
     private final JLabel paymentMethodLabel = createStyledLabel();
     private final JLabel paymentDateLabel = createStyledLabel();
-    private final DefaultTableModel tableModel;
     private final int invoiceId;
 
+    /**
+     * Constructor de la ventana de factura.
+     *
+     * @param parentPanel Panel padre de la vista.
+     * @param listener    Listener para manejar eventos.
+     * @param invoiceId   id de la factura a visualizar.
+     */
     public ViewInvoice(JPanel parentPanel, ActionListener listener, int invoiceId) {
         this.invoiceId = invoiceId;
         setTitle("Factura");
@@ -37,16 +44,41 @@ public class ViewInvoice extends JDialog {
         setModal(true);
         setLocationRelativeTo(parentPanel);
 
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBorder(new EmptyBorder(20, 30, 20, 30));
+        JPanel mainPanel = createMainPanel();
         add(mainPanel);
 
+        loadInvoiceData(invoiceId);
+        setVisible(true);
+    }
+
+    /**
+     * Crea y configura el panel principal de la vista.
+     */
+    private JPanel createMainPanel() {
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBorder(new EmptyBorder(20, 30, 20, 30));
+
+        // Sección superior (encabezado)
+        mainPanel.add(createHeaderPanel(), BorderLayout.NORTH);
+
+        // Panel con los datos generales de la factura
+        mainPanel.add(createDetailsPanel(), BorderLayout.CENTER);
+
+        // Tabla de detalles de los artículos
+        mainPanel.add(createTablePanel(), BorderLayout.SOUTH);
+
+        return mainPanel;
+    }
+
+    /**
+     * Crea el panel superior con el título y el botón de PDF.
+     */
+    private JPanel createHeaderPanel() {
         JPanel headerPanel = new JPanel(new BorderLayout());
 
         JButton pdfButton = new JButton("Generar PDF");
-        Dimension originalSize = pdfButton.getPreferredSize();
-        pdfButton.setPreferredSize(new Dimension(originalSize.width, 30));
-        pdfButton.addActionListener(e -> generatePDF(parentPanel, listener));
+        pdfButton.setPreferredSize(new Dimension(pdfButton.getPreferredSize().width, 30));
+        pdfButton.addActionListener(e -> generatePDF());
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         buttonPanel.setBorder(new EmptyBorder(20, 20, 20, 0));
@@ -64,8 +96,13 @@ public class ViewInvoice extends JDialog {
         topRightPanel.add(createFieldRow("Fecha de Pago:", paymentDateLabel));
         headerPanel.add(topRightPanel, BorderLayout.EAST);
 
-        mainPanel.add(headerPanel, BorderLayout.NORTH);
+        return headerPanel;
+    }
 
+    /**
+     * Crea el panel con los datos generales de la factura.
+     */
+    private JPanel createDetailsPanel() {
         JPanel detailsPanel = new JPanel(new GridLayout(2, 3, 10, 5));
         detailsPanel.setBorder(new CompoundBorder(
                 BorderFactory.createTitledBorder("Datos de la Factura"),
@@ -78,9 +115,47 @@ public class ViewInvoice extends JDialog {
         detailsPanel.add(createFieldRow("Base Imponible:", baseAmountLabel));
         detailsPanel.add(createFieldRow("IVA:", vatAmountLabel));
         detailsPanel.add(createFieldRow("Total:", totalAmountLabel));
-        mainPanel.add(detailsPanel, BorderLayout.CENTER);
+        return detailsPanel;
+    }
 
-        tableModel = new DefaultTableModel(
+    /**
+     * Crea una fila de campo con una etiqueta y un valor.
+     *
+     * @param labelText Texto de la etiqueta.
+     * @param valueLabel Componente JLabel donde se mostrará el valor.
+     * @return JPanel con la fila de campo.
+     */
+    private JPanel createFieldRow(String labelText, JLabel valueLabel) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
+
+        // Crear la etiqueta de la propiedad
+        JLabel label = new JLabel(labelText);
+        label.setFont(new Font(Constants.ARIAL, Font.BOLD, 13));
+        label.setPreferredSize(new Dimension(110, 30)); // Ajusta el ancho fijo de la etiqueta
+
+        // Configurar el JLabel donde se mostrará el valor
+        valueLabel.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(Color.LIGHT_GRAY, 1),  // Borde gris
+                new EmptyBorder(2, 4, 2, 4)           // Espaciado interno
+        ));
+        valueLabel.setOpaque(true);
+        valueLabel.setBackground(Color.WHITE);
+        valueLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        valueLabel.setFont(new Font(Constants.ARIAL, Font.PLAIN, 13));
+        valueLabel.setPreferredSize(new Dimension(140, 30)); // Tamaño del valor
+
+        // Agregar los elementos al panel
+        panel.add(label);
+        panel.add(valueLabel);
+
+        return panel;
+    }
+
+    /**
+     * Crea el panel con la tabla de detalles de los artículos.
+     */
+    private JPanel createTablePanel() {
+        DefaultTableModel tableModel = new DefaultTableModel(
                 new String[]{"Código", "Descripción", "Precio", "IVA", "Cantidad", "Subtotal", "Total"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -106,126 +181,50 @@ public class ViewInvoice extends JDialog {
         tablePanel.setBorder(new EmptyBorder(20, 0, 0, 0));
         tablePanel.add(tableScroll);
         tablePanel.setPreferredSize(new Dimension(0, 350));
-        mainPanel.add(tablePanel, BorderLayout.SOUTH);
 
-        loadInvoice(invoiceId);
-        setVisible(true);
+        return tablePanel;
     }
 
+    /**
+     * Carga los datos de la factura desde la base de datos.
+     */
+    private void loadInvoiceData(int invoiceId) {
+        try (Connection conn = Utils.getConnection();
+             PreparedStatement invoicePs = conn.prepareStatement(
+                     "SELECT f.fechaFacturaCliente, f.numeroFacturaCliente, f.baseImponibleFacturaCliente, " +
+                             "f.ivaFacturaCliente, f.totalFacturaCliente, f.fechaCobroFactura, fp.tipoFormaPago, " +
+                             "c.nombreCliente, w.name " +
+                             "FROM facturasclientes f " +
+                             "JOIN formapago fp ON f.formaCobroFactura = fp.idFormapago " +
+                             "JOIN clientes c ON f.idClienteFactura = c.idCliente " +
+                             "JOIN workers w ON f.idTrabajadorFactura = w.id " +
+                             "WHERE f.idFacturaCliente = ?")) {
 
-    private void loadInvoice(int invoiceId) {
-        try (Connection conn = Utils.getConnection()) {
-            loadInvoiceDetails(conn, invoiceId);
-            loadInvoiceLines(conn, invoiceId);
+            invoicePs.setInt(1, invoiceId);
+            ResultSet rs = invoicePs.executeQuery();
+
+            if (rs.next()) {
+                dateLabel.setText(rs.getString("fechaFacturaCliente"));
+                invoiceNumberLabel.setText(String.valueOf(rs.getInt("numeroFacturaCliente")));
+                baseAmountLabel.setText(String.format(Constants.TWO_DEC, rs.getDouble("baseImponibleFacturaCliente")));
+                vatAmountLabel.setText(String.format(Constants.TWO_DEC, rs.getDouble("ivaFacturaCliente")));
+                totalAmountLabel.setText(String.format(Constants.TWO_DEC, rs.getDouble("totalFacturaCliente")));
+                paymentDateLabel.setText(rs.getString("fechaCobroFactura"));
+                paymentMethodLabel.setText(rs.getString("tipoFormaPago"));
+                clientNameLabel.setText(rs.getString("nombreCliente"));
+                workerNameLabel.setText(rs.getString("name"));
+            }
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error al cargar la factura: " + e.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
         }
     }
 
-    private void loadInvoiceDetails(Connection conn, int invoiceId) throws SQLException {
-        String invoiceQuery = "SELECT fechaFacturaCliente, numeroFacturaCliente, baseImponibleFacturaCliente, " +
-                "ivaFacturaCliente, totalFacturaCliente, fechaCobroFactura, formaCobroFactura, " +
-                "idClienteFactura, idTrabajadorFactura " +
-                "FROM facturasclientes WHERE idFacturaCliente = ?";
-        try (PreparedStatement invoicePs = conn.prepareStatement(invoiceQuery)) {
-            invoicePs.setInt(1, invoiceId);
-            try (ResultSet invoiceRs = invoicePs.executeQuery()) {
-                if (invoiceRs.next()) {
-                    dateLabel.setText(invoiceRs.getString("fechaFacturaCliente"));
-                    invoiceNumberLabel.setText(String.valueOf(invoiceRs.getInt("numeroFacturaCliente")));
-                    baseAmountLabel.setText(String.format(Constants.TWO_DEC,
-                            invoiceRs.getDouble("baseImponibleFacturaCliente")));
-                    vatAmountLabel.setText(String.format(Constants.TWO_DEC,
-                            invoiceRs.getDouble("ivaFacturaCliente")));
-                    totalAmountLabel.setText(String.format(Constants.TWO_DEC,
-                            invoiceRs.getDouble("totalFacturaCliente")));
-                    paymentDateLabel.setText(invoiceRs.getString("fechaCobroFactura"));
-
-                    int clientId = invoiceRs.getInt("idClienteFactura");
-                    int workerId = invoiceRs.getInt("idTrabajadorFactura");
-                    int formaPagoId = invoiceRs.getInt("formaCobroFactura");
-
-                    loadPaymentMethod(conn, formaPagoId);
-                    loadClientName(conn, clientId);
-                    loadWorkerName(conn, workerId);
-                }
-            }
-        }
-    }
-
-    private void loadPaymentMethod(Connection conn, int formaPagoId) throws SQLException {
-        String paymentQuery = "SELECT tipoformapago FROM formapago WHERE idFormapago = ?";
-        try (PreparedStatement paymentPs = conn.prepareStatement(paymentQuery)) {
-            paymentPs.setInt(1, formaPagoId);
-            try (ResultSet paymentRs = paymentPs.executeQuery()) {
-                if (paymentRs.next()) {
-                    paymentMethodLabel.setText(paymentRs.getString("tipoformapago"));
-                }
-            }
-        }
-    }
-
-    private void loadClientName(Connection conn, int clientId) throws SQLException {
-        String clientQuery = "SELECT nombreCliente FROM clientes WHERE idCliente = ?";
-        try (PreparedStatement clientPs = conn.prepareStatement(clientQuery)) {
-            clientPs.setInt(1, clientId);
-            try (ResultSet clientRs = clientPs.executeQuery()) {
-                if (clientRs.next()) {
-                    clientNameLabel.setText(clientRs.getString("nombreCliente"));
-                }
-            }
-        }
-    }
-
-    private void loadWorkerName(Connection conn, int workerId) throws SQLException {
-        String workerQuery = "SELECT name FROM workers WHERE id = ?";
-        try (PreparedStatement workerPs = conn.prepareStatement(workerQuery)) {
-            workerPs.setInt(1, workerId);
-            try (ResultSet workerRs = workerPs.executeQuery()) {
-                if (workerRs.next()) {
-                    workerNameLabel.setText(workerRs.getString("name"));
-                }
-            }
-        }
-    }
-
-    private void loadInvoiceLines(Connection conn, int invoiceId) throws SQLException {
-        String linesQuery = "SELECT idArticulo, cantidad, iva FROM lineasfacturasclientes " +
-                "WHERE numeroFacturaCliente = ?";
-        try (PreparedStatement linesPs = conn.prepareStatement(linesQuery)) {
-            linesPs.setInt(1, invoiceId);
-            try (ResultSet linesRs = linesPs.executeQuery()) {
-                tableModel.setRowCount(0);
-                while (linesRs.next()) {
-                    int itemId = linesRs.getInt("idArticulo");
-                    int quantity = linesRs.getInt("cantidad");
-                    double lineVat = linesRs.getDouble("iva");
-
-                    Article article = getArticleDetails(conn, itemId);
-                    if (article == null) {
-                        continue;
-                    }
-
-                    double subtotal = article.price * quantity;
-                    double total = subtotal + (subtotal * lineVat / 100);
-                    tableModel.addRow(new Object[]{
-                            article.code,
-                            article.description,
-                            String.format(Constants.TWO_DEC, article.price),
-                            lineVat + " %",
-                            quantity,
-                            String.format(Constants.TWO_DEC, subtotal),
-                            String.format(Constants.TWO_DEC, total)
-                    });
-                }
-            }
-        }
-    }
-
-    private void generatePDF(JPanel panel, ActionListener listener) {
-        InvoicePDFGenerator.generateInvoicePDF(panel, listener, invoiceId, "factura.pdf");
+    /**
+     * Genera un PDF de la factura.
+     */
+    private void generatePDF() {
+        InvoicePDFGenerator.generateInvoicePDF(null, null, invoiceId, "factura.pdf");
         JOptionPane.showMessageDialog(this, "PDF generado correctamente", "Éxito", JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -234,44 +233,4 @@ public class ViewInvoice extends JDialog {
         label.setFont(new Font(Constants.ARIAL, Font.PLAIN, 13));
         return label;
     }
-
-    private JPanel createFieldRow(String labelText, JLabel label) {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
-        JLabel lbl = new JLabel(labelText);
-        lbl.setFont(new Font(Constants.ARIAL, Font.BOLD, 13));
-        lbl.setPreferredSize(new Dimension(110, 30));
-
-        label.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(Color.LIGHT_GRAY, 1),
-                new EmptyBorder(2, 4, 2, 4)
-        ));
-        label.setOpaque(true);
-        label.setBackground(Color.WHITE);
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-        label.setFont(new Font(Constants.ARIAL, Font.PLAIN, 13));
-        label.setPreferredSize(new Dimension(140, 30));
-
-        panel.add(lbl);
-        panel.add(label);
-        return panel;
-    }
-
-    private Article getArticleDetails(Connection conn, int itemId) throws SQLException {
-        String articleQuery = "SELECT codigoArticulo, descripcionArticulo, pvpArticulo FROM articulos" +
-                " WHERE idArticulo = ?";
-        try (PreparedStatement articlePs = conn.prepareStatement(articleQuery)) {
-            articlePs.setInt(1, itemId);
-            try (ResultSet articleRs = articlePs.executeQuery()) {
-                if (articleRs.next()) {
-                    String code = articleRs.getString("codigoArticulo");
-                    String description = articleRs.getString("descripcionArticulo");
-                    double price = articleRs.getDouble("pvpArticulo");
-                    return new Article(code, description, price);
-                }
-            }
-        }
-        return null;
-    }
-
-    private record Article(String code, String description, double price) {}
 }

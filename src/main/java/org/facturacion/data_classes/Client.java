@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 // Clase Client que representa a un cliente con sus datos y acciones disponibles
-@Getter  // Genera automáticamente los métodos getter para los atributos de la clase
+@Getter  // Genera automáticamente los Metodos getter para los atributos de la clase
 @FieldDefaults(level = AccessLevel.PRIVATE)  // Define el nivel de acceso de los campos como privado por defecto
 public class Client {
     // Atributos de la clase Client
@@ -74,7 +74,7 @@ public class Client {
         });
     }
 
-    // Método estático para mostrar la tabla de clientes en un panel dado
+    // Metodo estático para mostrar la tabla de clientes en un panel dado
     public static void showClientTable(JPanel panel, ActionListener listener) {
         // Obtiene la lista de clientes desde la base de datos
         List<Client> clients = Client.getClients(panel, listener);
@@ -139,7 +139,7 @@ public class Client {
         });
     }
 
-    // Método que obtiene la lista de clientes desde la base de datos
+    // Metodo que obtiene la lista de clientes desde la base de datos
     public static List<Client> getClients(JPanel panel, ActionListener listener) {
         List<Client> clients = new ArrayList<>();
         String query = "SELECT idCliente, nombreCliente, direccionCliente, cpCliente, poblacionCliente, " +

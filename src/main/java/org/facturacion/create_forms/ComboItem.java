@@ -6,14 +6,10 @@ import lombok.Getter;
  * Clase que representa un elemento de un JComboBox con un identificador numérico o un valor decimal.
  * Se usa para almacenar tanto identificadores de base de datos como valores numéricos de IVA.
  */
+@Getter
 public class ComboItem {
-
-    @Getter
-    private final int id;  // Identificador del elemento (por ejemplo, ID de cliente, trabajador, método de pago)
-
+    private final int id;  // Identificador del elemento (por ejemplo, ID de cliente, trabajador, metodo de pago)
     private final String display; // Texto que se mostrará en el JComboBox
-
-    @Getter
     private final double numeric; // Valor numérico (por ejemplo, porcentaje de IVA)
 
     /**
@@ -23,9 +19,7 @@ public class ComboItem {
      * @param display Texto que se mostrará en el JComboBox.
      */
     public ComboItem(int id, String display) {
-        this.id = id;
-        this.display = display;
-        this.numeric = 0; // Se establece en 0 porque este constructor es para elementos con ID.
+        this(id, display, 0); // Delegación al constructor principal
     }
 
     /**
@@ -35,9 +29,20 @@ public class ComboItem {
      * @param display Texto que se mostrará en el JComboBox.
      */
     public ComboItem(double numeric, String display) {
-        this.id = 0; // Se establece en 0 porque este constructor es para valores numéricos.
-        this.numeric = numeric;
+        this(0, display, numeric); // Delegación al constructor principal
+    }
+
+    /**
+     * Constructor principal privado para evitar duplicación de código.
+     *
+     * @param id      Identificador del elemento.
+     * @param display Texto que se mostrará en el JComboBox.
+     * @param numeric Valor numérico asociado al elemento.
+     */
+    private ComboItem(int id, String display, double numeric) {
+        this.id = id;
         this.display = display;
+        this.numeric = numeric;
     }
 
     /**
@@ -50,4 +55,3 @@ public class ComboItem {
         return display;
     }
 }
-

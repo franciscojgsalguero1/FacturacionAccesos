@@ -13,39 +13,51 @@ import java.sql.SQLException;
 
 /**
  * Clase que representa un formulario para la creación de un nuevo proveedor.
- * Permite ingresar datos como nombre, dirección, contacto y otros detalles relevantes.
  */
 public class CreateProviderForm extends JDialog {
-    private final JPanel parentPanel; // Panel donde se actualizará la tabla de proveedores.
-
-    // Campos de entrada de datos
-    private final JTextField nameField = new JTextField(20); // Nombre del proveedor.
-    private final JTextField addressField = new JTextField(20); // Dirección del proveedor.
-    private final JTextField postCodeField = new JTextField(5); // Código postal.
-    private final JTextField townField = new JTextField(20); // Ciudad.
-    private final JTextField provinceField = new JTextField(20); // Provincia.
-    private final JComboBox<String> countryCombo = new JComboBox<>(); // País.
-    private final JTextField cifField = new JTextField(9); // CIF del proveedor.
-    private final JTextField phoneField = new JTextField(15); // Teléfono de contacto.
-    private final JTextField emailField = new JTextField(20); // Email del proveedor.
-    private final JTextField websiteField = new JTextField(20); // Sitio web del proveedor.
+    private final JPanel parentPanel;
+    private final JTextField nameField = new JTextField(20);
+    private final JTextField addressField = new JTextField(20);
+    private final JTextField postCodeField = new JTextField(5);
+    private final JTextField townField = new JTextField(20);
+    private final JTextField provinceField = new JTextField(20);
+    private final JComboBox<String> countryCombo = new JComboBox<>();
+    private final JTextField cifField = new JTextField(9);
+    private final JTextField phoneField = new JTextField(15);
+    private final JTextField emailField = new JTextField(20);
+    private final JTextField websiteField = new JTextField(20);
 
     /**
-     * Constructor de la clase. Inicializa el formulario.
-     *
-     * @param parentPanel Panel donde se actualizará la tabla de proveedores.
+     * Constructor que inicializa el formulario.
      */
     public CreateProviderForm(JPanel parentPanel) {
         this.parentPanel = parentPanel;
+        initializeForm();
+    }
+
+    /**
+     * Configura la interfaz del formulario.
+     */
+    private void initializeForm() {
         setTitle("Crear Proveedor");
         setSize(800, 300);
         setLayout(new BorderLayout());
         setModal(true);
         setLocationRelativeTo(parentPanel);
 
-        loadCountries(); // Carga los países en el combo box.
+        loadCountries();
+        JPanel formPanel = buildFormPanel();
+        JPanel buttonPanel = buildButtonPanel();
 
-        // Configuración del panel de formulario
+        add(formPanel, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+        setVisible(true);
+    }
+
+    /**
+     * Construye el panel del formulario con los campos de entrada.
+     */
+    private JPanel buildFormPanel() {
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
         GridBagConstraints gbc = new GridBagConstraints();
@@ -53,7 +65,6 @@ public class CreateProviderForm extends JDialog {
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Estructura de filas para organizar los campos en el formulario
         Object[][] rows = {
                 {"Nombre:", nameField, "Dirección:", addressField},
                 {"Ciudad:", townField, "Provincia:", provinceField},
@@ -62,44 +73,31 @@ public class CreateProviderForm extends JDialog {
                 {"Email:", emailField, "Web:", websiteField}
         };
 
-        // Agrega las filas al formulario
         for (int row = 0; row < rows.length; row++) {
-            addLabelAndField(formPanel, gbc,
-                    (String) rows[row][0], (Component) rows[row][1],
+            addLabelAndField(formPanel, gbc, (String) rows[row][0], (Component) rows[row][1],
                     (String) rows[row][2], (Component) rows[row][3], row);
         }
-
-        // Botón para guardar los datos del proveedor
-        JButton saveButton = new JButton("Guardar");
-        saveButton.addActionListener(e -> saveProvider());
-
-        // Botón para cancelar y cerrar el formulario
-        JButton cancelButton = new JButton("Cancelar");
-        cancelButton.addActionListener(e -> dispose());
-
-        // Panel de botones
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.add(saveButton);
-        buttonPanel.add(cancelButton);
-
-        // Agregar los componentes al formulario principal
-        add(formPanel, BorderLayout.CENTER);
-        add(buttonPanel, BorderLayout.SOUTH);
-
-        // Mostrar el formulario
-        setVisible(true);
+        return formPanel;
     }
 
     /**
-     * Método para agregar una fila de etiquetas y campos al formulario.
-     *
-     * @param panel   Panel donde se agregarán los componentes.
-     * @param gbc     Configuración de GridBagLayout.
-     * @param label1  Etiqueta para el primer campo.
-     * @param comp1   Primer campo de entrada.
-     * @param label2  Etiqueta para el segundo campo.
-     * @param comp2   Segundo campo de entrada.
-     * @param row     Número de fila donde se colocarán los elementos.
+     * Construye el panel de botones.
+     */
+    private JPanel buildButtonPanel() {
+        JButton saveButton = new JButton("Guardar");
+        saveButton.addActionListener(e -> saveProvider());
+
+        JButton cancelButton = new JButton("Cancelar");
+        cancelButton.addActionListener(e -> dispose());
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(saveButton);
+        buttonPanel.add(cancelButton);
+        return buttonPanel;
+    }
+
+    /**
+     * Agrega una fila de etiquetas y campos al formulario.
      */
     private void addLabelAndField(JPanel panel, GridBagConstraints gbc, String label1, Component comp1,
                                   String label2, Component comp2, int row) {
@@ -119,7 +117,7 @@ public class CreateProviderForm extends JDialog {
     }
 
     /**
-     * Método para cargar los países desde la base de datos y agregarlos al JComboBox.
+     * Carga los países desde la base de datos y los añade al JComboBox.
      */
     private void loadCountries() {
         String query = "SELECT name FROM countries ORDER BY name";
@@ -130,43 +128,58 @@ public class CreateProviderForm extends JDialog {
                 countryCombo.addItem(rs.getString("name"));
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Error al cargar países: " + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            showError("Error al cargar países: ", e);
         }
     }
 
     /**
-     * Método para guardar el proveedor en la base de datos.
+     * Guarda el proveedor en la base de datos.
      */
     private void saveProvider() {
+        if (!validateFields()) return;
+
+        String query = "INSERT INTO proveedores (nombreProveedor, direccionProveedor, cpProveedor, poblacionProveedor, " +
+                "provinciaProveedor, paisProveedor, cifProveedor, telProveedor, emailProveedor, webProveedor) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
         try (Connection conn = Utils.getConnection();
-             PreparedStatement ps = conn.prepareStatement("INSERT INTO proveedores (nombreProveedor," +
-                     " direccionProveedor, cpProveedor, poblacionProveedor, provinciaProveedor, paisProveedor," +
-                     " cifProveedor, telProveedor, emailProveedor, webProveedor) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+             PreparedStatement ps = conn.prepareStatement(query)) {
 
-            // Asignar valores a la consulta SQL
-            ps.setString(1, nameField.getText()); // Nombre del proveedor.
-            ps.setString(2, addressField.getText()); // Dirección.
-            ps.setInt(3, Integer.parseInt(postCodeField.getText())); // Código postal.
-            ps.setString(4, townField.getText()); // Ciudad.
-            ps.setString(5, provinceField.getText()); // Provincia.
-            ps.setString(6, (String) countryCombo.getSelectedItem()); // País.
-            ps.setString(7, cifField.getText()); // CIF.
-            ps.setString(8, phoneField.getText()); // Teléfono.
-            ps.setString(9, emailField.getText()); // Email.
-            ps.setString(10, websiteField.getText()); // Sitio web.
-
-            // Ejecutar la inserción en la base de datos
+            ps.setString(1, nameField.getText().trim());
+            ps.setString(2, addressField.getText().trim());
+            ps.setInt(3, Integer.parseInt(postCodeField.getText().trim()));
+            ps.setString(4, townField.getText().trim());
+            ps.setString(5, provinceField.getText().trim());
+            ps.setString(6, (String) countryCombo.getSelectedItem());
+            ps.setString(7, cifField.getText().trim());
+            ps.setString(8, phoneField.getText().trim());
+            ps.setString(9, emailField.getText().trim());
+            ps.setString(10, websiteField.getText().trim());
             ps.executeUpdate();
             JOptionPane.showMessageDialog(this, "Proveedor creado con éxito.");
             dispose();
-
-            // Actualizar la tabla de proveedores en la interfaz de usuario
             Provider.showProviderTable(parentPanel, e -> {});
-        } catch (SQLException | NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Error al crear proveedor: " +
-                    e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException e) {
+            showError("Error al crear proveedor: ", e);
         }
+    }
+
+    /**
+     * Valida que los campos requeridos no estén vacíos.
+     */
+    private boolean validateFields() {
+        if (nameField.getText().trim().isEmpty() || addressField.getText().trim().isEmpty() ||
+                postCodeField.getText().trim().isEmpty() || cifField.getText().trim().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Todos los campos obligatorios deben estar completos.", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Muestra un mensaje de error en caso de fallo.
+     */
+    private void showError(String message, Exception e) {
+        JOptionPane.showMessageDialog(this, message + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
     }
 }

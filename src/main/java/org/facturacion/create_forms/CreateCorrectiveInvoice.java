@@ -21,9 +21,9 @@ import java.util.List;
  * Muestra una lista de facturas no rectificadas y permite seleccionar una para crear su rectificativa.
  */
 public class CreateCorrectiveInvoice extends JDialog {
-    private final JTable invoiceTable; // Tabla para mostrar las facturas disponibles
-    private final List<Integer> invoiceIds = new ArrayList<>(); // Lista de IDs de facturas no rectificadas
-    private final ActionListener refreshListener; // Listener para actualizar la interfaz después de crear la rectificativa
+    private final JTable invoiceTable;
+    private final List<Integer> invoiceIds = new ArrayList<>();
+    private final ActionListener refreshListener;
 
     /**
      * Constructor que inicializa la interfaz gráfica.
@@ -34,58 +34,51 @@ public class CreateCorrectiveInvoice extends JDialog {
         setTitle("Crear Factura Rectificativa");
         setSize(800, 500);
         setLayout(new BorderLayout());
-        setModal(true); // Hace que la ventana bloquee la interacción con la principal
-        setLocationRelativeTo(parentPanel); // Centra la ventana respecto al panel padre
+        setModal(true);
+        setLocationRelativeTo(parentPanel);
         this.refreshListener = refreshListener;
 
-        invoiceTable = new JTable(); // Inicializa la tabla
-        setupInvoiceTable(); // Configura la tabla
-        loadUncorrectedInvoices(); // Carga las facturas no rectificadas
+        invoiceTable = new JTable();
+        setupInvoiceTable();
+        loadUncorrectedInvoices();
 
-        JScrollPane tableScrollPane = new JScrollPane(invoiceTable);
-        add(tableScrollPane, BorderLayout.CENTER);
-
-        setVisible(true); // Muestra la ventana
+        add(new JScrollPane(invoiceTable), BorderLayout.CENTER);
+        setVisible(true);
     }
 
     /**
-     * Configura el modelo y los componentes de la tabla de facturas.
+     * Configura la tabla de facturas.
      */
     private void setupInvoiceTable() {
         DefaultTableModel model = new DefaultTableModel(
-                new String[]{"Número", "Cliente", "Trabajador", "Base Imponible", "IVA", "Total", "Pagada",
-                        Constants.ACTION}, 0) {
+                new String[]{"Número", "Cliente", "Trabajador", "Base Imponible", "IVA", "Total", "Pagada", Constants.ACTION}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return column == 7; // Solo la columna de acción (rectificar) es editable
+                return column == 7;
             }
         };
         invoiceTable.setModel(model);
-
-        // Configura la columna de botones para rectificar facturas
         invoiceTable.getColumn(Constants.ACTION).setCellRenderer(new ButtonRenderer());
         invoiceTable.getColumn(Constants.ACTION).setCellEditor(new ButtonEditor(invoiceIds));
     }
 
     /**
-     * Carga las facturas no rectificadas desde la base de datos y las añade a la tabla.
+     * Carga las facturas no rectificadas desde la base de datos.
      */
     private void loadUncorrectedInvoices() {
         String query = "SELECT idFacturaCliente, numeroFacturaCliente, idClienteFactura, idTrabajadorFactura, " +
                 "baseImponibleFacturaCliente, ivaFacturaCliente, totalFacturaCliente, cobradaFactura " +
-                "FROM facturasclientes WHERE corrected = 0"; // Solo selecciona facturas que aún no han sido rectificadas
+                "FROM facturasclientes WHERE corrected = 0";
 
         try (Connection conn = Utils.getConnection();
              PreparedStatement ps = conn.prepareStatement(query);
              ResultSet rs = ps.executeQuery()) {
-
             DefaultTableModel model = (DefaultTableModel) invoiceTable.getModel();
 
             while (rs.next()) {
                 int id = rs.getInt("idFacturaCliente");
-                invoiceIds.add(id); // Almacena los IDs de las facturas disponibles
-
-                Object[] rowData = {
+                invoiceIds.add(id);
+                model.addRow(new Object[]{
                         rs.getInt("numeroFacturaCliente"),
                         rs.getInt("idClienteFactura"),
                         rs.getInt("idTrabajadorFactura"),
@@ -93,19 +86,23 @@ public class CreateCorrectiveInvoice extends JDialog {
                         rs.getDouble("ivaFacturaCliente"),
                         rs.getDouble("totalFacturaCliente"),
                         rs.getBoolean("cobradaFactura") ? "Sí" : "No",
-                        Constants.RECTIFY // Botón de acción
-                };
-                model.addRow(rowData);
+                        Constants.RECTIFY
+                });
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this,
-                    "Error al cargar facturas: " + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            showError("Error al cargar facturas: " + e.getMessage());
         }
     }
 
     /**
-     * Clase interna para renderizar un botón en la tabla.
+     * Muestra un mensaje de error en un cuadro de diálogo.
+     */
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    /**
+     * Renderizador de botón para la tabla.
      */
     private static class ButtonRenderer extends JButton implements TableCellRenderer {
         public ButtonRenderer() {
@@ -115,33 +112,28 @@ public class CreateCorrectiveInvoice extends JDialog {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
                                                        boolean hasFocus, int row, int column) {
-            setText(Constants.RECTIFY); // Texto del botón
+            setText(Constants.RECTIFY);
             return this;
         }
     }
 
     /**
-     * Clase interna que maneja la edición del botón en la tabla.
+     * Editor de celda para los botones en la tabla.
      */
     private class ButtonEditor extends DefaultCellEditor {
-        private final JButton button; // Botón que se mostrará en la celda
-        private int selectedInvoiceId; // ID de la factura seleccionada
-        private final List<Integer> invoiceIds; // Lista de IDs de facturas
+        private final JButton button;
+        private int selectedInvoiceId;
+        private final List<Integer> invoiceIds;
 
-        /**
-         * Constructor del editor de botones.
-         * @param invoiceIds Lista de IDs de facturas disponibles.
-         */
         public ButtonEditor(List<Integer> invoiceIds) {
             super(new JCheckBox());
             this.invoiceIds = invoiceIds;
             this.button = new JButton(Constants.RECTIFY);
-            this.button.addActionListener(e -> rectifyInvoice(selectedInvoiceId)); // Acción del botón
+            this.button.addActionListener(e -> rectifyInvoice(selectedInvoiceId));
         }
 
         /**
-         * Método para crear la factura rectificativa a partir de una factura existente.
-         * @param invoiceId ID de la factura a rectificar.
+         * Crea la factura rectificativa a partir de una factura existente.
          */
         private void rectifyInvoice(int invoiceId) {
             String insertQuery = "INSERT INTO rectificativasclientes " +
@@ -158,33 +150,29 @@ public class CreateCorrectiveInvoice extends JDialog {
                  PreparedStatement updateStmt = conn.prepareStatement(updateQuery)) {
 
                 insertStmt.setInt(1, invoiceId);
-                insertStmt.executeUpdate(); // Inserta la nueva factura rectificativa
+                insertStmt.executeUpdate();
 
                 updateStmt.setInt(1, invoiceId);
-                updateStmt.executeUpdate(); // Marca la factura original como rectificada
+                updateStmt.executeUpdate();
 
                 JOptionPane.showMessageDialog(CreateCorrectiveInvoice.this,
                         "Factura rectificativa creada con éxito.");
 
-                // Refrescar la tabla principal
                 if (refreshListener != null) {
                     SwingUtilities.invokeLater(() -> refreshListener.actionPerformed(
                             new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "REFRESH")));
                 }
-
-                dispose(); // Cierra la ventana después de la creación
+                dispose();
 
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(CreateCorrectiveInvoice.this,
-                        "Error al crear la factura rectificativa: " + ex.getMessage(),
-                        "Error", JOptionPane.ERROR_MESSAGE);
+                showError("Error al crear la factura rectificativa: " + ex.getMessage());
             }
         }
 
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value,
                                                      boolean isSelected, int row, int column) {
-            selectedInvoiceId = invoiceIds.get(row); // Obtiene el ID de la factura en la fila seleccionada
+            selectedInvoiceId = invoiceIds.get(row);
             return button;
         }
     }
